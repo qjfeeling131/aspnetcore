@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 import { PromiseSource } from "./Utils";
 
@@ -14,7 +14,6 @@ export class TestEventSource implements EventSource {
     public eventSourceInitDict?: EventSourceInit;
     public withCredentials: boolean = false;
 
-    // tslint:disable-next-line:variable-name
     private _onopen?: (evt: Event) => any;
     public openSet: PromiseSource = new PromiseSource();
     public set onopen(value: (evt: Event) => any) {
@@ -40,17 +39,24 @@ export class TestEventSource implements EventSource {
             TestEventSource.eventSourceSet.resolve();
         }
     }
+    addEventListener<K extends keyof EventSourceEventMap>(type: K, listener: (this: EventSource, ev: EventSourceEventMap[K]) => any, options?: boolean | AddEventListenerOptions | undefined): void;
+    addEventListener(type: string, listener: (this: EventSource, event // The .NET Foundation licenses this file to you under the MIT license.
+        : MessageEvent<any>) => any, options?: boolean | AddEventListenerOptions | undefined): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions | undefined): void;
+    addEventListener(type: unknown, listener: unknown, options?: unknown): void {
+        throw new Error("Method not implemented.");
+    }
+    removeEventListener<K extends keyof EventSourceEventMap>(type: K, listener: (this: EventSource, ev: EventSourceEventMap[K]) => any, options?: boolean | EventListenerOptions | undefined): void;
+    removeEventListener(type: string, listener: (this: EventSource, event: MessageEvent<any>) => any, options?: boolean | EventListenerOptions | undefined): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions | undefined): void;
+    removeEventListener(type: unknown, listener: unknown, options?: unknown): void {
+        throw new Error("Method not implemented.");
+    }
 
     public close(): void {
         this.closed = true;
     }
-    public addEventListener(type: string, listener?: EventListener | EventListenerObject | null, options?: boolean | AddEventListenerOptions): void {
-        throw new Error("Method not implemented.");
-    }
     public dispatchEvent(evt: Event): boolean {
-        throw new Error("Method not implemented.");
-    }
-    public removeEventListener(type: string, listener?: EventListener | EventListenerObject | null, options?: boolean | EventListenerOptions): void {
         throw new Error("Method not implemented.");
     }
 
@@ -67,6 +73,7 @@ export class TestMessageEvent implements MessageEvent {
     }
     public data: any;
     public readonly origin!: string;
+    // eslint-disable-next-line @typescript-eslint/array-type
     public readonly ports!: ReadonlyArray<MessagePort>;
     public readonly source!: Window;
     public initMessageEvent(type: string, bubbles: boolean, cancelable: boolean, data: any, origin: string, lastEventId: string, source: Window): void {

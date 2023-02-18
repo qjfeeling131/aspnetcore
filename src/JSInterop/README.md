@@ -4,8 +4,8 @@ This directory contains sources for [`Microsoft.JSInterop`](https://www.nuget.or
 
 The primary use case is for applications built with Blazor. For usage information, see the following documentation:
 
- * [Call JavaScript functions from .NET methods in ASP.NET Core Blazor](https://docs.microsoft.com/aspnet/core/blazor/call-javascript-from-dotnet)
- * [Call .NET methods from JavaScript functions in ASP.NET Core Blazor](https://docs.microsoft.com/aspnet/core/blazor/call-dotnet-from-javascript)
+ * [Call JavaScript functions from .NET methods in ASP.NET Core Blazor](https://learn.microsoft.com/aspnet/core/blazor/call-javascript-from-dotnet)
+ * [Call .NET methods from JavaScript functions in ASP.NET Core Blazor](https://learn.microsoft.com/aspnet/core/blazor/call-dotnet-from-javascript)
 
 ## Description
 
@@ -29,7 +29,7 @@ Since `Microsoft.JSInterop.JS` is platform-independent, runtime environments suc
 
 To build the .NET code, you can:
 
- * Run `dotnet build` in the `Microsoft.JSInterop/src` directory. You can also read more [on building a subset of the code](../../docs/BuildFromSource.md#building-a-subset-of-the-code).
+ * Run `dotnet build` in the `Microsoft.JSInterop/src` directory. You can also read more [on building the project](../../docs/BuildFromSource.md#step-3-build-the-repo).
  * Run `dotnet build` or `dotnet test` in the `Microsoft.JSInterop/test` directory. You can also read more about how to [run the tests on the command line](../../docs/BuildFromSource.md#running-tests-on-command-line).
 
 Alternatively, open `JSInterop.slnf` in Visual Studio.

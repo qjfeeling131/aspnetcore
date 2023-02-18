@@ -24,6 +24,7 @@ HandlerResolver::HandlerResolver(HMODULE hModule, const IHttpServer &pServer)
       m_pServer(pServer),
       m_loadedApplicationHostingModel(HOSTING_UNKNOWN)
 {
+    m_disallowRotationOnConfigChange = false;
     InitializeSRWLock(&m_requestHandlerLoadLock);
 }
 
@@ -169,6 +170,8 @@ HandlerResolver::GetApplicationFactory(const IHttpApplication& pApplication, con
 
     m_loadedApplicationHostingModel = options.QueryHostingModel();
     m_loadedApplicationId = pApplication.GetApplicationId();
+    m_disallowRotationOnConfigChange = options.QueryDisallowRotationOnConfigChange();
+
     RETURN_IF_FAILED(LoadRequestHandlerAssembly(pApplication, shadowCopyPath, options, pApplicationFactory, errorContext));
 
     return S_OK;
@@ -187,6 +190,11 @@ APP_HOSTING_MODEL HandlerResolver::GetHostingModel()
     SRWExclusiveLock lock(m_requestHandlerLoadLock);
 
     return m_loadedApplicationHostingModel;
+}
+
+bool HandlerResolver::GetDisallowRotationOnConfigChange()
+{
+    return m_disallowRotationOnConfigChange;
 }
 
 HRESULT
@@ -313,10 +321,21 @@ try
                 errorContext.generalErrorType = "Failed to load ASP.NET Core runtime";
                 errorContext.errorReason = "The specified version of Microsoft.NetCore.App or Microsoft.AspNetCore.App was not found.";
 
-                EventLog::Error(
-                    ASPNETCORE_EVENT_GENERAL_ERROR,
-                    ASPNETCORE_EVENT_HOSTFXR_FAILURE_MSG
-                );
+                if (intHostFxrExitCode == AppArgNotRunnable)
+                {
+                    errorContext.detailedErrorContent = "Provided application path does not exist, or isn't a .dll or .exe.";
+                    EventLog::Error(
+                        ASPNETCORE_EVENT_GENERAL_ERROR,
+                        ASPNETCORE_EVENT_HOSTFXR_BAD_APPLICATION_FAILURE_MSG
+                    );
+                }
+                else
+                {
+                    EventLog::Error(
+                        ASPNETCORE_EVENT_GENERAL_ERROR,
+                        ASPNETCORE_EVENT_HOSTFXR_FAILURE_MSG
+                    );
+                }
 
                 return E_UNEXPECTED;
             }

@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 import { DefaultReconnectPolicy } from "../src/DefaultReconnectPolicy";
 import { HttpRequest, HttpResponse } from "../src/HttpClient";
@@ -30,7 +30,6 @@ const commonHttpOptions: IHttpConnectionOptions = {
 };
 
 // We use a different mapping table here to help catch any unintentional breaking changes.
-// tslint:disable:object-literal-sort-keys
 const ExpectedLogLevelMappings = {
     trace: LogLevel.Trace,
     debug: LogLevel.Debug,
@@ -384,6 +383,28 @@ describe("HubConnectionBuilder", () => {
         };
 
         expect(builder.reconnectPolicy!.nextRetryDelayInMilliseconds(retryContextFinal)).toBe(null);
+    });
+
+    it("can configure serverTimeoutInMilliseconds for HubConnection", async () => {
+        const milliseconds = 60000;
+
+        const connection = createConnectionBuilder()
+            .withUrl("http://example.com")
+            .withServerTimeout(milliseconds)
+            .build();
+
+        expect(connection.serverTimeoutInMilliseconds).toBe(milliseconds);
+    });
+
+    it("can configure keepAliveIntervalInMilliseconds for HubConnection", async () => {
+        const milliseconds = 60000;
+
+        const connection = createConnectionBuilder()
+            .withUrl("http://example.com")
+            .withKeepAliveInterval(milliseconds)
+            .build();
+
+        expect(connection.keepAliveIntervalInMilliseconds).toBe(milliseconds);
     });
 });
 

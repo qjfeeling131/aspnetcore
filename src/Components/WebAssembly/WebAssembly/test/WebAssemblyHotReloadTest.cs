@@ -1,25 +1,29 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.AspNetCore.Components.RenderTree;
-using Xunit;
+using Microsoft.Extensions.HotReload;
 
-namespace Microsoft.AspNetCore.Components.WebAssembly.HotReload
+namespace Microsoft.AspNetCore.Components.WebAssembly.HotReload;
+
+public class WebAssemblyHotReloadTest
 {
-    public class WebAssemblyHotReloadTest
+    [Fact]
+    public void WebAssemblyHotReload_DiscoversMetadataHandlers_FromHot()
     {
-        [Fact]
-        public void WebAssemblyHotReload_DiscoversMetadataHandlers_FromComponentsAssembly()
-        {
-            // Arrange
-            var assemblies = new[] { typeof(Renderer).Assembly, };
+        // Arrange
+        var hotReloadManager = typeof(Renderer).Assembly.GetType("Microsoft.AspNetCore.Components.HotReload.HotReloadManager");
+        Assert.NotNull(hotReloadManager);
 
-            // Act
-            var (beforeUpdate, afterUpdate) = WebAssemblyHotReload.GetMetadataUpdateHandlerActions(assemblies);
+        var handlerActions = new HotReloadAgent.UpdateHandlerActions();
+        var logs = new List<string>();
+        var hotReloadAgent = new HotReloadAgent(logs.Add);
 
-            // Assert
-            Assert.Empty(beforeUpdate);
-            Assert.Single(afterUpdate);
-        }
+        // Act
+        hotReloadAgent.GetHandlerActions(handlerActions, hotReloadManager);
+
+        // Assert
+        Assert.Empty(handlerActions.ClearCache);
+        Assert.Single(handlerActions.UpdateApplication);
     }
 }

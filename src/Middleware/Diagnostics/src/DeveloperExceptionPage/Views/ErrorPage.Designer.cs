@@ -4,88 +4,159 @@ namespace Microsoft.AspNetCore.Diagnostics.RazorViews
 {
     #line hidden
     using System.Threading.Tasks;
+#nullable restore
 #line 1 "ErrorPage.cshtml"
 using System;
 
 #line default
 #line hidden
+#nullable disable
+#nullable restore
 #line 2 "ErrorPage.cshtml"
 using System.Globalization;
 
 #line default
 #line hidden
+#nullable disable
+#nullable restore
 #line 3 "ErrorPage.cshtml"
 using System.Linq;
 
 #line default
 #line hidden
+#nullable disable
+#nullable restore
 #line 4 "ErrorPage.cshtml"
 using System.Net;
 
 #line default
 #line hidden
+#nullable disable
+#nullable restore
 #line 5 "ErrorPage.cshtml"
 using System.Reflection;
 
 #line default
 #line hidden
+#nullable disable
+#nullable restore
 #line 6 "ErrorPage.cshtml"
 using Microsoft.AspNetCore.Diagnostics.RazorViews;
 
 #line default
 #line hidden
+#nullable disable
+#nullable restore
 #line 7 "ErrorPage.cshtml"
 using Microsoft.AspNetCore.Diagnostics;
 
 #line default
 #line hidden
+#nullable disable
     internal class ErrorPage : Microsoft.Extensions.RazorViews.BaseView
     {
         #pragma warning disable 1998
         public async override global::System.Threading.Tasks.Task ExecuteAsync()
         {
+#nullable restore
 #line 17 "ErrorPage.cshtml"
   
     // TODO: Response.ReasonPhrase = "Internal Server Error";
     Response.ContentType = "text/html; charset=utf-8";
-    string location = string.Empty;
+    string? location = string.Empty;
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("<!DOCTYPE html>\r\n<html");
-            BeginWriteAttribute("lang", " lang=\"", 536, "\"", 597, 1);
+            BeginWriteAttribute("lang", " lang=\"", 537, "\"", 598, 1);
+#nullable restore
 #line 23 "ErrorPage.cshtml"
-WriteAttributeValue("", 543, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, 543, 54, false);
+WriteAttributeValue("", 544, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, 544, 54, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(" xmlns=\"http://www.w3.org/1999/xhtml\">\r\n    <head>\r\n        <meta charset=\"utf-8\" />\r\n        <title>");
+#nullable restore
 #line 26 "ErrorPage.cshtml"
-          Write(Resources.ErrorPageHtml_Title);
+          Write(Model.Title);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral(@"</title>
         <style>
-            body {
+            :root {
+    --color-text: #222;
+    --color-background: #fff;
+    --color-border: #ddd;
+    --color-link: #105e85;
+    --color-link-hover: #157eb0;
+
+    --color-heading-main: #44525e;
+    --color-heading-stacktrace: #363636;
+    --color-table-heading: #44525e;
+
+    --color-tab-link: #105e85;
+    --color-tab-selected: #fff;
+    --color-tab-selected-background: #105e85;
+
+    --color-code-background: #fbfbfb;
+    --color-code-highlight: #c70000;
+    --color-code-context-linenum: #606060;
+    --color-code-context: #606060;
+    --color-code-context-button-background: #ddd;
+}
+
+/* Intentional double at-signs here to escape properly when included in cshtml */
+");
+            WriteLiteral(@"@media (prefers-color-scheme: dark) {
+    :root {
+        --color-text: #dcdcdc;
+        --color-background: #222;
+        --color-border: #444;
+        --color-link: #4db7ea;
+        --color-link-hover: #88cfea;
+
+        --color-heading-main: #a9bac7;
+        --color-heading-stacktrace: #c7c7c7;
+        --color-table-heading: #a9bac7;
+
+        --color-tab-link: #4db7ea;
+        --color-tab-selected: #222;
+        --color-tab-selected-background: #4db7ea;
+
+        --color-code-background: #1c1c1c;
+        --color-code-highlight: #ff8787;
+        --color-code-context-linenum: #9B9B9B;
+        --color-code-context: #9B9B9B;
+        --color-code-context-button-background: #444;
+    }
+}
+
+body {
     font-family: 'Segoe UI', Tahoma, Arial, Helvetica, sans-serif;
     font-size: .813em;
-    color: #222;
-    background-color: #fff;
+    color: var(--color-text);
+    background-color: var(--color-background);
 }
 
 h1 {
-    color: #44525e;
+    color: var(--color-heading-main);
     margin: 15px 0 15px 0;
 }
 
 h2 {
     margin: 10px 5px 0 0;
+    padding:");
+            WriteLiteral(@" 5px;
+    border-bottom: 1px solid var(--color-border);
 }
 
 h3 {
-    color: #363636;
+    color: var(--color-heading-stacktrace);
     margin: 5px 5px 0 0;
     font-weight: normal;
 }
@@ -95,6 +166,16 @@ code {
     font-weight: bold;
 }
 
+a {
+    color: var(--color-link);
+    text-decoration: none;
+}
+a:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
+}
+
+/* Exception title & message */
 body .titleerror {
     padding: 3px 3px 6px 3px;
     display: block;
@@ -102,204 +183,174 @@ body .titleerror {
     font-weight: 100;
 }
 
+/* Exception location */
 body .location {
     margin: 3px 0 10px 30px;
 }
 
+/* Tab navigation */
 #header {
     font-size: 18px;
     padding: 15px 0;
-    border-top: 1px #ddd solid;
-    border-bottom: 1px #ddd solid;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: 0;
 }
+#header li {
+    display: inline;
+    margin: 5px;
+    padding: 5px;
+    color: var(--color-tab-link);
+    cursor: pointer;
+}
+#header .selected {
+    color");
+            WriteLiteral(@": var(--color-tab-selected);
+    background: var(--color-tab-selected-background);
+}
 
-    #header li {
-        display: inline;
-        margin: 5px;
-        padding: 5px;
-        color: #a0a0a0;
-        cursor: pointer;
-    }
-
-    #header .selected {
-        background: #44c5f2;
-        color: #fff");
-            WriteLiteral(@";
-    }
-
+/* Stack page */
+#stackpage .details {
+    font-size: 1.2em;
+    padding: 3px;
+}
 #stackpage ul {
     list-style: none;
     padding-left: 0;
     margin: 0;
-    /*border-bottom: 1px #ddd solid;*/
 }
-
-#stackpage .details {
-    font-size: 1.2em;
-    padding: 3px;
-    color: #000;
-}
-
-#stackpage .stackerror {
-    padding: 5px;
-    border-bottom: 1px #ddd solid;
-}
-
 
 #stackpage .frame {
     padding: 0;
     margin: 0 0 0 30px;
 }
+#stackpage .frame h3 {
+    padding: 2px;
+    margin: 0;
+}
 
-    #stackpage .frame h3 {
-        padding: 2px;
-        margin: 0;
-    }
-
+/* Stack frame source */
 #stackpage .source {
     padding: 0 0 0 30px;
 }
-
-    #stackpage .source ol li {
-        font-family: Consolas, ""Courier New"", courier, monospace;
-        white-space: pre;
-        background-color: #fbfbfb;
-    }
-
-#stackpage .frame .source .highlight li span {
-    color: #FF0000;
+#stackpage .source ol li {
+    font-family: Consolas, ""Courier New"", courier, monospace;
+    white-space: pre;
+    background-color: var(--color-code-background);
 }
 
-#stackpage .source ol.collapsible li {
-    color: #888;
+/* Stack frame source: highlighted line */
+#stackpage .source .highlight {
+    border-left: 3px solid var(--color-code-highlight);
+    margin-left: -3px;
+    font-weight: bold;
+}
+#stackpage .source .highlight li span {
+    color: var(--color-code-highlight);
 }
 
-    #stackpage .source ol.collapsible li span {
-        color: #606060;
-    }
-
-#routingpage .subheader {
-    padding: 5px;
-    border-bottom: 1px #ddd solid;
+/* Stack frame source: context lines */
+#stackpage .source .collapsible {
+    color: var(--color-code-context-li");
+            WriteLiteral(@"nenum);
 }
-
-.page table {
-    border-collapse");
-            WriteLiteral(@": separate;
-    border-spacing: 0;
-    margin: 0 0 20px;
-}
-
-.page th {
-    vertical-align: bottom;
-    padding: 10px 5px 5px 5px;
-    font-weight: 400;
-    color: #a0a0a0;
-    text-align: left;
-}
-
-.page td {
-    padding: 3px 10px;
-}
-
-.page th, .page td {
-    border-right: 1px #ddd solid;
-    border-bottom: 1px #ddd solid;
-    border-left: 1px transparent solid;
-    border-top: 1px transparent solid;
-    box-sizing: border-box;
-}
-
-    .page th:last-child, .page td:last-child {
-        border-right: 1px transparent solid;
-    }
-
-.page .length {
-    text-align: right;
-}
-
-a {
-    color: #1ba1e2;
-    text-decoration: none;
-}
-
-    a:hover {
-        color: #13709e;
-        text-decoration: underline;
-    }
-
-.showRawException {
-    cursor: pointer;
-    color: #44c5f2;
-    background-color: transparent;
-    font-size: 1.2em;
-    text-align: left;
-    text-decoration: none;
-    display: inline-block;
-    border: 0;
-    padding: 0;
-}
-
-.rawExceptionStackTrace {
-    ");
-            WriteLiteral(@"font-size: 1.2em;
-}
-
-.rawExceptionBlock {
-    border-top: 1px #ddd solid;
-    border-bottom: 1px #ddd solid;
-}
-
-.showRawExceptionContainer {
-    margin-top: 10px;
-    margin-bottom: 10px;
+#stackpage .source .collapsible li span {
+    color: var(--color-code-context);
 }
 
 .expandCollapseButton {
-    cursor: pointer;
-    float: left;
-    height: 16px;
-    width: 16px;
-    font-size: 10px;
     position: absolute;
     left: 10px;
-    background-color: #eee;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    color: inherit;
+    background: var(--color-code-context-button-background);
     padding: 0;
     border: 0;
-    margin: 0;
+    cursor: pointer;
+}
+
+/* Table */
+.page table {
+    border-collapse: collapse;
+    margin: 0 0 20px;
+}
+.page th {
+    padding: 10px 10px 5px 10px;
+    color: var(--color-table-heading);
+    text-align: left;
+}
+.page td {
+    padding: 3px 10px;
+}
+.page tr {
+    border-bottom: 1px solid var(--color-border);
+}
+.page tr > :not(:last-child) {
+    border-right: 1px solid var(--color-border);
+}
+
+/* Raw exception details */
+.rawExceptionBlock {
+    font-size: 1.2em;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+.showRawException {
+    display: inline-block;
+    color: var(--color-link);
+    backgr");
+            WriteLiteral(@"ound: transparent;
+    font: inherit;
+    border: 0;
+    padding: 10px 0;
+    cursor: pointer;
+}
+.showRawException:hover {
+    color: var(--color-link-hover);
+    text-decoration: underline;
 }
 
         </style>
     </head>
     <body>
         <h1>");
-#line 230 "ErrorPage.cshtml"
+#nullable restore
+#line 250 "ErrorPage.cshtml"
        Write(Resources.ErrorPageHtml_UnhandledException);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</h1>\r\n");
-#line 231 "ErrorPage.cshtml"
+#nullable restore
+#line 251 "ErrorPage.cshtml"
          foreach (var errorDetail in Model.ErrorDetails)
         {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("            <div class=\"titleerror\">");
-#line 233 "ErrorPage.cshtml"
-                               Write(errorDetail.Error.GetType().Name);
+#nullable restore
+#line 253 "ErrorPage.cshtml"
+                               Write(errorDetail.Error!.GetType().Name);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral(": ");
-#line 233 "ErrorPage.cshtml"
-                                                                          Output.Write(HtmlEncodeAndReplaceLineBreaks(errorDetail.Error.Message)); 
+#nullable restore
+#line 253 "ErrorPage.cshtml"
+                                                                           Output.Write(HtmlEncodeAndReplaceLineBreaks(errorDetail.Error.Message)); 
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</div>\r\n");
-#line 234 "ErrorPage.cshtml"
+#nullable restore
+#line 254 "ErrorPage.cshtml"
 
             var firstFrame = errorDetail.StackFrames.FirstOrDefault();
             if (firstFrame != null)
@@ -311,62 +362,80 @@ a {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p class=\"location\">");
-#line 242 "ErrorPage.cshtml"
+#nullable restore
+#line 262 "ErrorPage.cshtml"
                                Write(location);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral(" in <code");
-            BeginWriteAttribute("title", " title=\"", 4957, "\"", 4981, 1);
-#line 242 "ErrorPage.cshtml"
-WriteAttributeValue("", 4965, firstFrame.File, 4965, 16, false);
+            BeginWriteAttribute("title", " title=\"", 6440, "\"", 6464, 1);
+#nullable restore
+#line 262 "ErrorPage.cshtml"
+WriteAttributeValue("", 6448, firstFrame.File, 6448, 16, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(">");
-#line 242 "ErrorPage.cshtml"
+#nullable restore
+#line 262 "ErrorPage.cshtml"
                                                                            Write(System.IO.Path.GetFileName(firstFrame.File));
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</code>, line ");
-#line 242 "ErrorPage.cshtml"
+#nullable restore
+#line 262 "ErrorPage.cshtml"
                                                                                                                                      Write(firstFrame.Line);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 243 "ErrorPage.cshtml"
+#nullable restore
+#line 263 "ErrorPage.cshtml"
             }
             else if (!string.IsNullOrEmpty(location))
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p class=\"location\">");
-#line 246 "ErrorPage.cshtml"
+#nullable restore
+#line 266 "ErrorPage.cshtml"
                                Write(location);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 247 "ErrorPage.cshtml"
+#nullable restore
+#line 267 "ErrorPage.cshtml"
             }
             else
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p class=\"location\">");
-#line 250 "ErrorPage.cshtml"
+#nullable restore
+#line 270 "ErrorPage.cshtml"
                                Write(Resources.ErrorPageHtml_UnknownLocation);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 251 "ErrorPage.cshtml"
+#nullable restore
+#line 271 "ErrorPage.cshtml"
             }
 
             var reflectionTypeLoadException = errorDetail.Error as ReflectionTypeLoadException;
@@ -377,65 +446,85 @@ WriteAttributeValue("", 4965, firstFrame.File, 4965, 16, false);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                    <h3>Loader Exceptions:</h3>\r\n                    <ul>\r\n");
-#line 260 "ErrorPage.cshtml"
+#nullable restore
+#line 280 "ErrorPage.cshtml"
                          foreach (var ex in reflectionTypeLoadException.LoaderExceptions)
                         {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                            <li>");
-#line 262 "ErrorPage.cshtml"
-                           Write(ex.Message);
+#nullable restore
+#line 282 "ErrorPage.cshtml"
+                           Write(ex!.Message);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</li>\r\n");
-#line 263 "ErrorPage.cshtml"
+#nullable restore
+#line 283 "ErrorPage.cshtml"
                         }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                    </ul>\r\n");
-#line 265 "ErrorPage.cshtml"
+#nullable restore
+#line 285 "ErrorPage.cshtml"
                 }
             }
         }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("        <ul id=\"header\">\r\n            <li id=\"stack\" tabindex=\"1\" class=\"selected\">\r\n                ");
-#line 270 "ErrorPage.cshtml"
+#nullable restore
+#line 290 "ErrorPage.cshtml"
            Write(Resources.ErrorPageHtml_StackButton);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\r\n            </li>\r\n            <li id=\"query\" tabindex=\"2\">\r\n                ");
-#line 273 "ErrorPage.cshtml"
+#nullable restore
+#line 293 "ErrorPage.cshtml"
            Write(Resources.ErrorPageHtml_QueryButton);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\r\n            </li>\r\n            <li id=\"cookies\" tabindex=\"3\">\r\n                ");
-#line 276 "ErrorPage.cshtml"
+#nullable restore
+#line 296 "ErrorPage.cshtml"
            Write(Resources.ErrorPageHtml_CookiesButton);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\r\n            </li>\r\n            <li id=\"headers\" tabindex=\"4\">\r\n                ");
-#line 279 "ErrorPage.cshtml"
+#nullable restore
+#line 299 "ErrorPage.cshtml"
            Write(Resources.ErrorPageHtml_HeadersButton);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\r\n            </li>\r\n            <li id=\"routing\" tabindex=\"5\">\r\n                ");
-#line 282 "ErrorPage.cshtml"
+#nullable restore
+#line 302 "ErrorPage.cshtml"
            Write(Resources.ErrorPageHtml_RoutingButton);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\r\n            </li>\r\n        </ul>\r\n\r\n        <div id=\"stackpage\" class=\"page\">\r\n            <ul>\r\n");
-#line 288 "ErrorPage.cshtml"
+#nullable restore
+#line 308 "ErrorPage.cshtml"
                   
                     var exceptionCount = 0;
                     var stackFrameCount = 0;
@@ -445,7 +534,9 @@ WriteAttributeValue("", 4965, firstFrame.File, 4965, 16, false);
 
 #line default
 #line hidden
-#line 294 "ErrorPage.cshtml"
+#nullable disable
+#nullable restore
+#line 314 "ErrorPage.cshtml"
                  foreach (var errorDetail in Model.ErrorDetails)
                 {
                     exceptionCount++;
@@ -454,20 +545,26 @@ WriteAttributeValue("", 4965, firstFrame.File, 4965, 16, false);
 
 #line default
 #line hidden
-            WriteLiteral("                    <li>\r\n                        <h2 class=\"stackerror\">");
-#line 300 "ErrorPage.cshtml"
-                                          Write(errorDetail.Error.GetType().Name);
+#nullable disable
+            WriteLiteral("                    <li>\r\n                        <h2>");
+#nullable restore
+#line 320 "ErrorPage.cshtml"
+                       Write(errorDetail.Error!.GetType().Name);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral(": ");
-#line 300 "ErrorPage.cshtml"
-                                                                             Write(errorDetail.Error.Message);
+#nullable restore
+#line 320 "ErrorPage.cshtml"
+                                                           Write(errorDetail.Error.Message);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</h2>\r\n                        <ul>\r\n");
-#line 302 "ErrorPage.cshtml"
+#nullable restore
+#line 322 "ErrorPage.cshtml"
                              foreach (var frame in errorDetail.StackFrames)
                             {
                                 stackFrameCount++;
@@ -476,246 +573,317 @@ WriteAttributeValue("", 4965, firstFrame.File, 4965, 16, false);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                <li class=\"frame\"");
-            BeginWriteAttribute("id", " id=\"", 7532, "\"", 7545, 1);
-#line 307 "ErrorPage.cshtml"
-WriteAttributeValue("", 7537, frameId, 7537, 8, false);
+            BeginWriteAttribute("id", " id=\"", 8998, "\"", 9011, 1);
+#nullable restore
+#line 327 "ErrorPage.cshtml"
+WriteAttributeValue("", 9003, frameId, 9003, 8, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(">\r\n");
-#line 308 "ErrorPage.cshtml"
+#nullable restore
+#line 328 "ErrorPage.cshtml"
                                      if (string.IsNullOrEmpty(frame.File))
                                     {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                        <h3>");
-#line 310 "ErrorPage.cshtml"
+#nullable restore
+#line 330 "ErrorPage.cshtml"
                                        Write(frame.Function);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</h3>\r\n");
-#line 311 "ErrorPage.cshtml"
+#nullable restore
+#line 331 "ErrorPage.cshtml"
                                     }
                                     else
                                     {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                        <h3>");
-#line 314 "ErrorPage.cshtml"
+#nullable restore
+#line 334 "ErrorPage.cshtml"
                                        Write(frame.Function);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral(" in <code");
-            BeginWriteAttribute("title", " title=\"", 7918, "\"", 7937, 1);
-#line 314 "ErrorPage.cshtml"
-WriteAttributeValue("", 7926, frame.File, 7926, 11, false);
+            BeginWriteAttribute("title", " title=\"", 9384, "\"", 9403, 1);
+#nullable restore
+#line 334 "ErrorPage.cshtml"
+WriteAttributeValue("", 9392, frame.File, 9392, 11, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(">");
-#line 314 "ErrorPage.cshtml"
+#nullable restore
+#line 334 "ErrorPage.cshtml"
                                                                                     Write(System.IO.Path.GetFileName(frame.File));
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</code></h3>\r\n");
-#line 315 "ErrorPage.cshtml"
+#nullable restore
+#line 335 "ErrorPage.cshtml"
                                     }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\r\n");
-#line 317 "ErrorPage.cshtml"
+#nullable restore
+#line 337 "ErrorPage.cshtml"
                                      if (frame.Line != 0 && frame.ContextCode.Any())
                                     {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                        <button class=\"expandCollapseButton\" data-frameId=\"");
-#line 319 "ErrorPage.cshtml"
+#nullable restore
+#line 339 "ErrorPage.cshtml"
                                                                                       Write(frameId);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\">+</button>\r\n                                        <div class=\"source\">\r\n");
-#line 321 "ErrorPage.cshtml"
+#nullable restore
+#line 341 "ErrorPage.cshtml"
                                              if (frame.PreContextCode.Any())
                                             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                                <ol");
-            BeginWriteAttribute("start", " start=\"", 8509, "\"", 8538, 1);
-#line 323 "ErrorPage.cshtml"
-WriteAttributeValue("", 8517, frame.PreContextLine, 8517, 21, false);
+            BeginWriteAttribute("start", " start=\"", 9975, "\"", 10004, 1);
+#nullable restore
+#line 343 "ErrorPage.cshtml"
+WriteAttributeValue("", 9983, frame.PreContextLine, 9983, 21, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(" class=\"collapsible\">\r\n");
-#line 324 "ErrorPage.cshtml"
+#nullable restore
+#line 344 "ErrorPage.cshtml"
                                                      foreach (var line in frame.PreContextCode)
                                                     {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                                        <li><span>");
-#line 326 "ErrorPage.cshtml"
+#nullable restore
+#line 346 "ErrorPage.cshtml"
                                                              Write(line);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</span></li>\r\n");
-#line 327 "ErrorPage.cshtml"
+#nullable restore
+#line 347 "ErrorPage.cshtml"
                                                     }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                                </ol>\r\n");
-#line 329 "ErrorPage.cshtml"
+#nullable restore
+#line 349 "ErrorPage.cshtml"
                                             }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("\r\n                                            <ol");
-            BeginWriteAttribute("start", " start=\"", 9005, "\"", 9024, 1);
-#line 331 "ErrorPage.cshtml"
-WriteAttributeValue("", 9013, frame.Line, 9013, 11, false);
+            BeginWriteAttribute("start", " start=\"", 10471, "\"", 10490, 1);
+#nullable restore
+#line 351 "ErrorPage.cshtml"
+WriteAttributeValue("", 10479, frame.Line, 10479, 11, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(" class=\"highlight\">\r\n");
-#line 332 "ErrorPage.cshtml"
+#nullable restore
+#line 352 "ErrorPage.cshtml"
                                                  foreach (var line in frame.ContextCode)
                                                 {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                                    <li><span>");
-#line 334 "ErrorPage.cshtml"
+#nullable restore
+#line 354 "ErrorPage.cshtml"
                                                          Write(line);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</span></li>\r\n");
-#line 335 "ErrorPage.cshtml"
+#nullable restore
+#line 355 "ErrorPage.cshtml"
                                                 }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                            </ol>\r\n\r\n");
-#line 338 "ErrorPage.cshtml"
+#nullable restore
+#line 358 "ErrorPage.cshtml"
                                              if (frame.PostContextCode.Any())
                                             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                                <ol");
-            BeginWriteAttribute("start", " start=\'", 9549, "\'", 9574, 1);
-#line 340 "ErrorPage.cshtml"
-WriteAttributeValue("", 9557, frame.Line + 1, 9557, 17, false);
+            BeginWriteAttribute("start", " start=\'", 11015, "\'", 11040, 1);
+#nullable restore
+#line 360 "ErrorPage.cshtml"
+WriteAttributeValue("", 11023, frame.Line + 1, 11023, 17, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(" class=\"collapsible\">\r\n");
-#line 341 "ErrorPage.cshtml"
+#nullable restore
+#line 361 "ErrorPage.cshtml"
                                                      foreach (var line in frame.PostContextCode)
                                                     {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                                        <li><span>");
-#line 343 "ErrorPage.cshtml"
+#nullable restore
+#line 363 "ErrorPage.cshtml"
                                                              Write(line);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</span></li>\r\n");
-#line 344 "ErrorPage.cshtml"
+#nullable restore
+#line 364 "ErrorPage.cshtml"
                                                     }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                                </ol>\r\n");
-#line 346 "ErrorPage.cshtml"
+#nullable restore
+#line 366 "ErrorPage.cshtml"
                                             }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                        </div>\r\n");
-#line 348 "ErrorPage.cshtml"
+#nullable restore
+#line 368 "ErrorPage.cshtml"
                                     }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                </li>\r\n");
-#line 350 "ErrorPage.cshtml"
+#nullable restore
+#line 370 "ErrorPage.cshtml"
                             }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral(@"                        </ul>
                     </li>
                     <li>
                         <br />
                         <div class=""rawExceptionBlock"">
-                            <div class=""showRawExceptionContainer"">
-                                <button class=""showRawException"" data-exceptionDetailId=""");
-#line 357 "ErrorPage.cshtml"
-                                                                                    Write(exceptionDetailId);
+                            <button class=""showRawException"" data-exceptionDetailId=""");
+#nullable restore
+#line 376 "ErrorPage.cshtml"
+                                                                                Write(exceptionDetailId);
 
 #line default
 #line hidden
-            WriteLiteral("\">Show raw exception details</button>\r\n                            </div>\r\n                            <div");
-            BeginWriteAttribute("id", " id=\"", 10606, "\"", 10629, 1);
-#line 359 "ErrorPage.cshtml"
-WriteAttributeValue("", 10611, exceptionDetailId, 10611, 18, false);
+#nullable disable
+            WriteLiteral("\">Show raw exception details</button>\r\n                            <div");
+            BeginWriteAttribute("id", " id=\"", 11963, "\"", 11986, 1);
+#nullable restore
+#line 377 "ErrorPage.cshtml"
+WriteAttributeValue("", 11968, exceptionDetailId, 11968, 18, false);
 
 #line default
 #line hidden
+#nullable disable
             EndWriteAttribute();
             WriteLiteral(" class=\"rawExceptionDetails\">\r\n                                <pre class=\"rawExceptionStackTrace\">");
-#line 360 "ErrorPage.cshtml"
+#nullable restore
+#line 378 "ErrorPage.cshtml"
                                                                Write(errorDetail.Error.ToString());
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</pre>\r\n                            </div>\r\n                        </div>\r\n                    </li>\r\n");
-#line 364 "ErrorPage.cshtml"
+#nullable restore
+#line 382 "ErrorPage.cshtml"
                 }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("            </ul>\r\n        </div>\r\n\r\n        <div id=\"querypage\" class=\"page\">\r\n");
-#line 369 "ErrorPage.cshtml"
+#nullable restore
+#line 387 "ErrorPage.cshtml"
              if (Model.Query.Any())
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <table>\r\n                    <thead>\r\n                        <tr>\r\n                            <th>");
-#line 374 "ErrorPage.cshtml"
+#nullable restore
+#line 392 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_VariableColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                            <th>");
-#line 375 "ErrorPage.cshtml"
+#nullable restore
+#line 393 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_ValueColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                        </tr>\r\n                    </thead>\r\n                    <tbody>\r\n");
-#line 379 "ErrorPage.cshtml"
+#nullable restore
+#line 397 "ErrorPage.cshtml"
                          foreach (var kv in Model.Query.OrderBy(kv => kv.Key))
                         {
                             foreach (var v in kv.Value)
@@ -723,130 +891,170 @@ WriteAttributeValue("", 10611, exceptionDetailId, 10611, 18, false);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                <tr>\r\n                                    <td>");
-#line 384 "ErrorPage.cshtml"
+#nullable restore
+#line 402 "ErrorPage.cshtml"
                                    Write(kv.Key);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                    <td>");
-#line 385 "ErrorPage.cshtml"
+#nullable restore
+#line 403 "ErrorPage.cshtml"
                                    Write(v);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                </tr>\r\n");
-#line 387 "ErrorPage.cshtml"
+#nullable restore
+#line 405 "ErrorPage.cshtml"
                             }
                         }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                    </tbody>\r\n                </table>\r\n");
-#line 391 "ErrorPage.cshtml"
+#nullable restore
+#line 409 "ErrorPage.cshtml"
             }
             else
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p>");
-#line 394 "ErrorPage.cshtml"
+#nullable restore
+#line 412 "ErrorPage.cshtml"
               Write(Resources.ErrorPageHtml_NoQueryStringData);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 395 "ErrorPage.cshtml"
+#nullable restore
+#line 413 "ErrorPage.cshtml"
             }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("        </div>\r\n\r\n        <div id=\"cookiespage\" class=\"page\">\r\n");
-#line 399 "ErrorPage.cshtml"
+#nullable restore
+#line 417 "ErrorPage.cshtml"
              if (Model.Cookies.Any())
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <table>\r\n                    <thead>\r\n                        <tr>\r\n                            <th>");
-#line 404 "ErrorPage.cshtml"
+#nullable restore
+#line 422 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_VariableColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                            <th>");
-#line 405 "ErrorPage.cshtml"
+#nullable restore
+#line 423 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_ValueColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                        </tr>\r\n                    </thead>\r\n                    <tbody>\r\n");
-#line 409 "ErrorPage.cshtml"
+#nullable restore
+#line 427 "ErrorPage.cshtml"
                          foreach (var kv in Model.Cookies.OrderBy(kv => kv.Key))
                         {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                            <tr>\r\n                                <td>");
-#line 412 "ErrorPage.cshtml"
+#nullable restore
+#line 430 "ErrorPage.cshtml"
                                Write(kv.Key);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                <td>");
-#line 413 "ErrorPage.cshtml"
+#nullable restore
+#line 431 "ErrorPage.cshtml"
                                Write(kv.Value);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                            </tr>\r\n");
-#line 415 "ErrorPage.cshtml"
+#nullable restore
+#line 433 "ErrorPage.cshtml"
                         }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                    </tbody>\r\n                </table>\r\n");
-#line 418 "ErrorPage.cshtml"
+#nullable restore
+#line 436 "ErrorPage.cshtml"
             }
             else
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p>");
-#line 421 "ErrorPage.cshtml"
+#nullable restore
+#line 439 "ErrorPage.cshtml"
               Write(Resources.ErrorPageHtml_NoCookieData);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 422 "ErrorPage.cshtml"
+#nullable restore
+#line 440 "ErrorPage.cshtml"
             }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("        </div>\r\n\r\n        <div id=\"headerspage\" class=\"page\">\r\n");
-#line 426 "ErrorPage.cshtml"
+#nullable restore
+#line 444 "ErrorPage.cshtml"
              if (Model.Headers.Any())
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <table>\r\n                    <thead>\r\n                        <tr>\r\n                            <th>");
-#line 431 "ErrorPage.cshtml"
+#nullable restore
+#line 449 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_VariableColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                            <th>");
-#line 432 "ErrorPage.cshtml"
+#nullable restore
+#line 450 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_ValueColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                        </tr>\r\n                    </thead>\r\n                    <tbody>\r\n");
-#line 436 "ErrorPage.cshtml"
+#nullable restore
+#line 454 "ErrorPage.cshtml"
                          foreach (var kv in Model.Headers.OrderBy(kv => kv.Key))
                         {
                             foreach (var v in kv.Value)
@@ -854,245 +1062,322 @@ WriteAttributeValue("", 10611, exceptionDetailId, 10611, 18, false);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                                <tr>\r\n                                    <td>");
-#line 441 "ErrorPage.cshtml"
+#nullable restore
+#line 459 "ErrorPage.cshtml"
                                    Write(kv.Key);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                    <td>");
-#line 442 "ErrorPage.cshtml"
+#nullable restore
+#line 460 "ErrorPage.cshtml"
                                    Write(v);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                </tr>\r\n");
-#line 444 "ErrorPage.cshtml"
+#nullable restore
+#line 462 "ErrorPage.cshtml"
                             }
                         }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                    </tbody>\r\n                </table>\r\n");
-#line 448 "ErrorPage.cshtml"
+#nullable restore
+#line 466 "ErrorPage.cshtml"
             }
             else
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p>");
-#line 451 "ErrorPage.cshtml"
+#nullable restore
+#line 469 "ErrorPage.cshtml"
               Write(Resources.ErrorPageHtml_NoHeaderData);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 452 "ErrorPage.cshtml"
+#nullable restore
+#line 470 "ErrorPage.cshtml"
             }
 
 #line default
 #line hidden
-            WriteLiteral("        </div>\r\n\r\n        <div id=\"routingpage\" class=\"page\">\r\n            <h2 class=\"subheader\">");
-#line 456 "ErrorPage.cshtml"
-                             Write(Resources.ErrorPageHtml_Endpoint);
+#nullable disable
+            WriteLiteral("        </div>\r\n\r\n        <div id=\"routingpage\" class=\"page\">\r\n            <h2>");
+#nullable restore
+#line 474 "ErrorPage.cshtml"
+           Write(Resources.ErrorPageHtml_Endpoint);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</h2>\r\n");
-#line 457 "ErrorPage.cshtml"
+#nullable restore
+#line 475 "ErrorPage.cshtml"
              if (Model.Endpoint != null)
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <table>\r\n                    <thead>\r\n                        <tr>\r\n                            <th>");
-#line 462 "ErrorPage.cshtml"
+#nullable restore
+#line 480 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_NameColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                            <th>");
-#line 463 "ErrorPage.cshtml"
+#nullable restore
+#line 481 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_ValueColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                        </tr>\r\n                    </thead>\r\n                    <tbody>\r\n                        <tr>\r\n                            <td>");
-#line 468 "ErrorPage.cshtml"
+#nullable restore
+#line 486 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_EndpointDisplayName);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                            <td>");
-#line 469 "ErrorPage.cshtml"
+#nullable restore
+#line 487 "ErrorPage.cshtml"
                            Write(Model.Endpoint.DisplayName);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                        </tr>\r\n");
-#line 471 "ErrorPage.cshtml"
+#nullable restore
+#line 489 "ErrorPage.cshtml"
                          if (!string.IsNullOrEmpty(Model.Endpoint.RoutePattern))
                         {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                            <tr>\r\n                                <td>");
-#line 474 "ErrorPage.cshtml"
+#nullable restore
+#line 492 "ErrorPage.cshtml"
                                Write(Resources.ErrorPageHtml_EndpointRoutePattern);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                <td>");
-#line 475 "ErrorPage.cshtml"
+#nullable restore
+#line 493 "ErrorPage.cshtml"
                                Write(Model.Endpoint.RoutePattern);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                            </tr>\r\n");
-#line 477 "ErrorPage.cshtml"
+#nullable restore
+#line 495 "ErrorPage.cshtml"
                         }
 
 #line default
 #line hidden
-#line 478 "ErrorPage.cshtml"
+#nullable disable
+#nullable restore
+#line 496 "ErrorPage.cshtml"
                          if (Model.Endpoint.Order != null)
                         {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                            <tr>\r\n                                <td>");
-#line 481 "ErrorPage.cshtml"
+#nullable restore
+#line 499 "ErrorPage.cshtml"
                                Write(Resources.ErrorPageHtml_EndpointRouteOrder);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                <td>");
-#line 482 "ErrorPage.cshtml"
+#nullable restore
+#line 500 "ErrorPage.cshtml"
                                Write(Model.Endpoint.Order);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                            </tr>\r\n");
-#line 484 "ErrorPage.cshtml"
+#nullable restore
+#line 502 "ErrorPage.cshtml"
                         }
 
 #line default
 #line hidden
-#line 485 "ErrorPage.cshtml"
+#nullable disable
+#nullable restore
+#line 503 "ErrorPage.cshtml"
                          if (!string.IsNullOrEmpty(Model.Endpoint.HttpMethods))
                         {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                            <tr>\r\n                                <td>");
-#line 488 "ErrorPage.cshtml"
+#nullable restore
+#line 506 "ErrorPage.cshtml"
                                Write(Resources.ErrorPageHtml_EndpointRouteHttpMethod);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                <td>");
-#line 489 "ErrorPage.cshtml"
+#nullable restore
+#line 507 "ErrorPage.cshtml"
                                Write(Model.Endpoint.HttpMethods);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                            </tr>\r\n");
-#line 491 "ErrorPage.cshtml"
+#nullable restore
+#line 509 "ErrorPage.cshtml"
                         }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                    </tbody>\r\n                </table>\r\n");
-#line 494 "ErrorPage.cshtml"
+#nullable restore
+#line 512 "ErrorPage.cshtml"
             }
             else
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p>");
-#line 497 "ErrorPage.cshtml"
+#nullable restore
+#line 515 "ErrorPage.cshtml"
               Write(Resources.ErrorPageHtml_NoEndpoint);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 498 "ErrorPage.cshtml"
+#nullable restore
+#line 516 "ErrorPage.cshtml"
             }
 
 #line default
 #line hidden
-            WriteLiteral("            <h2 class=\"subheader\">");
-#line 499 "ErrorPage.cshtml"
-                             Write(Resources.ErrorPageHtml_RouteValues);
+#nullable disable
+            WriteLiteral("            <h2>");
+#nullable restore
+#line 517 "ErrorPage.cshtml"
+           Write(Resources.ErrorPageHtml_RouteValues);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</h2>\r\n");
-#line 500 "ErrorPage.cshtml"
+#nullable restore
+#line 518 "ErrorPage.cshtml"
              if (Model.RouteValues != null && Model.RouteValues.Any())
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <table>\r\n                    <thead>\r\n                        <tr>\r\n                            <th>");
-#line 505 "ErrorPage.cshtml"
+#nullable restore
+#line 523 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_VariableColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                            <th>");
-#line 506 "ErrorPage.cshtml"
+#nullable restore
+#line 524 "ErrorPage.cshtml"
                            Write(Resources.ErrorPageHtml_ValueColumn);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</th>\r\n                        </tr>\r\n                    </thead>\r\n                    <tbody>\r\n");
-#line 510 "ErrorPage.cshtml"
+#nullable restore
+#line 528 "ErrorPage.cshtml"
                          foreach (var kv in Model.RouteValues.OrderBy(kv => kv.Key))
                         {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                            <tr>\r\n                                <td>");
-#line 513 "ErrorPage.cshtml"
+#nullable restore
+#line 531 "ErrorPage.cshtml"
                                Write(kv.Key);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                                <td>");
-#line 514 "ErrorPage.cshtml"
-                               Write(kv.Value);
+#nullable restore
+#line 532 "ErrorPage.cshtml"
+                                Write(kv.Value!);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</td>\r\n                            </tr>\r\n");
-#line 516 "ErrorPage.cshtml"
+#nullable restore
+#line 534 "ErrorPage.cshtml"
                         }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                    </tbody>\r\n                </table>\r\n");
-#line 519 "ErrorPage.cshtml"
+#nullable restore
+#line 537 "ErrorPage.cshtml"
             }
             else
             {
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("                <p>");
-#line 522 "ErrorPage.cshtml"
+#nullable restore
+#line 540 "ErrorPage.cshtml"
               Write(Resources.ErrorPageHtml_NoRouteValues);
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral("</p>\r\n");
-#line 523 "ErrorPage.cshtml"
+#nullable restore
+#line 541 "ErrorPage.cshtml"
             }
 
 #line default
 #line hidden
+#nullable disable
             WriteLiteral(@"        </div>
 
         <script>
@@ -1301,6 +1586,7 @@ WriteAttributeValue("", 10611, exceptionDetailId, 10611, 18, false);
 ");
         }
         #pragma warning restore 1998
+#nullable restore
 #line 9 "ErrorPage.cshtml"
  
     public ErrorPage(ErrorPageModel model)
@@ -1312,6 +1598,7 @@ WriteAttributeValue("", 10611, exceptionDetailId, 10611, 18, false);
 
 #line default
 #line hidden
+#nullable disable
     }
 }
 #pragma warning restore 1591

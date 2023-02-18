@@ -1,82 +1,121 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Builder;
+using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Microsoft.AspNetCore.Hosting
+namespace Microsoft.AspNetCore.Hosting;
+
+// This exists solely to bootstrap the configuration
+internal sealed class BootstrapHostBuilder : IHostBuilder
 {
-    // This exists solely to bootstrap the configuration
-    internal class BootstrapHostBuilder : IHostBuilder
+    private readonly HostApplicationBuilder _builder;
+
+    private readonly List<Action<IConfigurationBuilder>> _configureHostActions = new();
+    private readonly List<Action<HostBuilderContext, IConfigurationBuilder>> _configureAppActions = new();
+    private readonly List<Action<HostBuilderContext, IServiceCollection>> _configureServicesActions = new();
+
+    public BootstrapHostBuilder(HostApplicationBuilder builder)
     {
-        public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();
-        private readonly HostBuilderContext _context;
-        private readonly Configuration _configuration;
-        private readonly WebHostEnvironment _environment;
+        _builder = builder;
 
-        public BootstrapHostBuilder(Configuration configuration, WebHostEnvironment webHostEnvironment)
+        foreach (var descriptor in _builder.Services)
         {
-            _configuration = configuration;
-            _environment = webHostEnvironment;
-            _context = new HostBuilderContext(Properties)
+            if (descriptor.ServiceType == typeof(HostBuilderContext))
             {
-                Configuration = configuration,
-                HostingEnvironment = webHostEnvironment
-            };
+                Context = (HostBuilderContext)descriptor.ImplementationInstance!;
+                break;
+            }
         }
 
-        public IHost Build()
+        if (Context is null)
         {
-            // HostingHostBuilderExtensions.ConfigureDefaults should never call this.
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{nameof(HostBuilderContext)} must exist in the {nameof(IServiceCollection)}");
+        }
+    }
+
+    public IDictionary<object, object> Properties => Context.Properties;
+
+    public HostBuilderContext Context { get; }
+
+    public IHostBuilder ConfigureHostConfiguration(Action<IConfigurationBuilder> configureDelegate)
+    {
+        _configureHostActions.Add(configureDelegate ?? throw new ArgumentNullException(nameof(configureDelegate)));
+        return this;
+    }
+
+    public IHostBuilder ConfigureAppConfiguration(Action<HostBuilderContext, IConfigurationBuilder> configureDelegate)
+    {
+        _configureAppActions.Add(configureDelegate ?? throw new ArgumentNullException(nameof(configureDelegate)));
+        return this;
+    }
+
+    public IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
+    {
+        _configureServicesActions.Add(configureDelegate ?? throw new ArgumentNullException(nameof(configureDelegate)));
+        return this;
+    }
+
+    public IHost Build()
+    {
+        // ConfigureWebHostDefaults should never call this.
+        throw new InvalidOperationException();
+    }
+
+    public IHostBuilder ConfigureContainer<TContainerBuilder>(Action<HostBuilderContext, TContainerBuilder> configureDelegate)
+    {
+        // ConfigureWebHostDefaults should never call this.
+        throw new InvalidOperationException();
+    }
+
+    public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(IServiceProviderFactory<TContainerBuilder> factory) where TContainerBuilder : notnull
+    {
+        // ConfigureWebHostDefaults should never call this.
+        throw new InvalidOperationException();
+    }
+
+    public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(Func<HostBuilderContext, IServiceProviderFactory<TContainerBuilder>> factory) where TContainerBuilder : notnull
+    {
+        // ConfigureWebHostDefaults should never call this.
+        throw new InvalidOperationException();
+    }
+
+    public ServiceDescriptor RunDefaultCallbacks()
+    {
+        foreach (var configureHostAction in _configureHostActions)
+        {
+            configureHostAction(_builder.Configuration);
         }
 
-        public IHostBuilder ConfigureAppConfiguration(Action<HostBuilderContext, IConfigurationBuilder> configureDelegate)
+        // ConfigureAppConfiguration cannot modify the host configuration because doing so could
+        // change the environment, content root and application name which is not allowed at this stage.
+        foreach (var configureAppAction in _configureAppActions)
         {
-            configureDelegate(_context, _configuration);
-            _environment.ApplyConfigurationSettings(_configuration);
-            _configuration.ChangeBasePath(_environment.ContentRootPath);
-            return this;
+            configureAppAction(Context, _builder.Configuration);
         }
 
-        public IHostBuilder ConfigureContainer<TContainerBuilder>(Action<HostBuilderContext, TContainerBuilder> configureDelegate)
+        foreach (var configureServicesAction in _configureServicesActions)
         {
-            // This is not called by HostingHostBuilderExtensions.ConfigureDefaults currently, but that could change in the future.
-            // If this does get called in the future, it should be called again at a later stage on the ConfigureHostBuilder.
-            return this;
+            configureServicesAction(Context, _builder.Services);
         }
 
-        public IHostBuilder ConfigureHostConfiguration(Action<IConfigurationBuilder> configureDelegate)
+        ServiceDescriptor? genericWebHostServiceDescriptor = null;
+
+        for (int i = _builder.Services.Count - 1; i >= 0; i--)
         {
-            configureDelegate(_configuration);
-            _environment.ApplyConfigurationSettings(_configuration);
-            _configuration.ChangeBasePath(_environment.ContentRootPath);
-            return this;
+            var descriptor = _builder.Services[i];
+            if (descriptor.ServiceType == typeof(IHostedService))
+            {
+                Debug.Assert(descriptor.ImplementationType?.Name == "GenericWebHostService");
+
+                genericWebHostServiceDescriptor = descriptor;
+                _builder.Services.RemoveAt(i);
+                break;
+            }
         }
 
-        public IHostBuilder ConfigureServices(Action<HostBuilderContext, IServiceCollection> configureDelegate)
-        {
-            // HostingHostBuilderExtensions.ConfigureDefaults calls this via ConfigureLogging
-            // during the initial config stage. It should be called again later on the ConfigureHostBuilder.
-            return this;
-        }
-
-        public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(IServiceProviderFactory<TContainerBuilder> factory) where TContainerBuilder : notnull
-        {
-            // This is not called by HostingHostBuilderExtensions.ConfigureDefaults currently, but that chould change in the future.
-            // If this does get called in the future, it should be called again at a later stage on the ConfigureHostBuilder.
-            return this;
-        }
-
-        public IHostBuilder UseServiceProviderFactory<TContainerBuilder>(Func<HostBuilderContext, IServiceProviderFactory<TContainerBuilder>> factory) where TContainerBuilder : notnull
-        {
-            // HostingHostBuilderExtensions.ConfigureDefaults calls this via UseDefaultServiceProvider
-            // during the initial config stage. It should be called again later on the ConfigureHostBuilder.
-            return this;
-        }
+        return genericWebHostServiceDescriptor ?? throw new InvalidOperationException($"GenericWebHostedService must exist in the {nameof(IServiceCollection)}");
     }
 }

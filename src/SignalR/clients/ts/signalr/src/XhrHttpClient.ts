@@ -1,9 +1,10 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 import { AbortError, HttpError, TimeoutError } from "./Errors";
 import { HttpClient, HttpRequest, HttpResponse } from "./HttpClient";
 import { ILogger, LogLevel } from "./ILogger";
+import { isArrayBuffer } from "./Utils";
 
 export class XhrHttpClient extends HttpClient {
     private readonly _logger: ILogger;
@@ -33,8 +34,17 @@ export class XhrHttpClient extends HttpClient {
             xhr.open(request.method!, request.url!, true);
             xhr.withCredentials = request.withCredentials === undefined ? true : request.withCredentials;
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            // Explicitly setting the Content-Type header for React Native on Android platform.
-            xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+            if (request.content === "") {
+                request.content = undefined;
+            }
+            if (request.content) {
+                // Explicitly setting the Content-Type header for React Native on Android platform.
+                if (isArrayBuffer(request.content)) {
+                    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+                } else {
+                    xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+                }
+            }
 
             const headers = request.headers;
             if (headers) {
@@ -81,7 +91,7 @@ export class XhrHttpClient extends HttpClient {
                 reject(new TimeoutError());
             };
 
-            xhr.send(request.content || "");
+            xhr.send(request.content);
         });
     }
 }

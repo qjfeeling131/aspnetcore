@@ -1,6 +1,6 @@
 #
 # This file must be used by invoking ". .\activate.ps1" from the command line.
-# You cannot run it directly. See https://docs.microsoft.com/powershell/module/microsoft.powershell.core/about/about_scripts#script-scope-and-dot-sourcing
+# You cannot run it directly. See https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_scripts#script-scope-and-dot-sourcing
 #
 # To exit from the environment this creates, execute the 'deactivate' function.
 #
@@ -25,6 +25,7 @@ function deactivate ([switch]$init) {
     }
 
     Remove-Item env:DOTNET_ROOT -ea ignore
+    Remove-Item 'env:DOTNET_ROOT(x86)' -ea Ignore
     Remove-Item env:DOTNET_MULTILEVEL_LOOKUP -ea ignore
     if (-not $init) {
         # Remove the deactivate function

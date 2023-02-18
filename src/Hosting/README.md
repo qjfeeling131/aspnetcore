@@ -2,7 +2,7 @@
 
 Hosting provides the entry point for configuring and running your application.
 
-Documentation for Hosting can be found in the [ASP.NET Core Web Host](https://docs.microsoft.com/aspnet/core/fundamentals/host/web-host) and [.NET Generic Host in ASP.NET Core](https://docs.microsoft.com/aspnet/core/fundamentals/host/generic-host) docs.
+Documentation for Hosting can be found in the [ASP.NET Core Web Host](https://learn.microsoft.com/aspnet/core/fundamentals/host/web-host) and [.NET Generic Host in ASP.NET Core](https://learn.microsoft.com/aspnet/core/fundamentals/host/generic-host) docs.
 
 ## Description
 
@@ -20,7 +20,7 @@ The following contains a description of the sub-directories.
 
 ### Build
 
-To build this specific project from source, you can follow the instructions [on building a subset of the code](../../docs/BuildFromSource.md#building-a-subset-of-the-code).
+To build this specific project from source, follow the instructions [on building the project](../../docs/BuildFromSource.md#step-3-build-the-repo).
 
 ### Test
 

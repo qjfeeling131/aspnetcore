@@ -1,6 +1,6 @@
 # DataProtection
 
-Data Protection APIs for protecting and unprotecting data. You can find documentation for Data Protection in the [ASP.NET Core Documentation](https://docs.microsoft.com/aspnet/core/security/data-protection/).
+Data Protection APIs for protecting and unprotecting data. You can find documentation for Data Protection in the [ASP.NET Core Documentation](https://learn.microsoft.com/aspnet/core/security/data-protection/).
 
 ## Description
 
@@ -20,7 +20,7 @@ The following contains a description of each sub-directory in the `DataProtectio
 
 ### Build
 
-To build this specific project from source, follow the instructions [on building a subset of the code](../../docs/BuildFromSource.md#building-a-subset-of-the-code).
+To build this specific project from source, follow the instructions [on building the project](../../docs/BuildFromSource.md#step-3-build-the-repo).
 
 ### Test
 

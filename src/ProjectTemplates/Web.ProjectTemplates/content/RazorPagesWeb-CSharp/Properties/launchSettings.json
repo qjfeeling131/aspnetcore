@@ -1,4 +1,5 @@
-﻿{
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
   "iisSettings": {
     //#if (WindowsAuth)
     "windowsAuthentication": true,
@@ -9,7 +10,7 @@
     //#endif
     "iisExpress": {
       "applicationUrl": "http://localhost:8080",
-      //#if(RequiresHttps)
+      //#if (HasHttpsProfile)
       "sslPort": 44300
       //#else
       "sslPort": 0
@@ -17,35 +18,33 @@
     }
   },
   "profiles": {
-    "Company.WebApplication1": {
+    //#if (HasHttpProfile)
+    "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "hotReloadProfile": "aspnetcore",
-      //#if(RequiresHttps)
-      "applicationUrl": "https://localhost:5001;http://localhost:5000",
-      //#else
       "applicationUrl": "http://localhost:5000",
-      //#endif
       "environmentVariables": {
-        //#if(RazorRuntimeCompilation)
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
-        //#else
         "ASPNETCORE_ENVIRONMENT": "Development"
-        //#endif
       }
     },
+    //#endif
+    //#if (HasHttpsProfile)
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:5001;http://localhost:5000",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    //#endif
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        //#if(RazorRuntimeCompilation)
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
-        //#else
         "ASPNETCORE_ENVIRONMENT": "Development"
-        //#endif
       }
     }
   }

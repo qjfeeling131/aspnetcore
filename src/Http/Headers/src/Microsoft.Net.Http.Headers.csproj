@@ -7,14 +7,18 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>http</PackageTags>
     <IsPackable>false</IsPackable>
-    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsTrimmable>true</IsTrimmable>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="Microsoft.Extensions.Primitives" />
     <Compile Include="..\..\Shared\CookieHeaderParserShared.cs" Link="CookieHeaderParserShared.cs" />
-    <Compile Include="..\..\Shared\HttpRuleParser.cs" />
-    <Compile Include="..\..\Shared\HttpParseResult.cs" />
+    <Compile Include="$(SharedSourceRoot)HttpRuleParser.cs" />
+    <Compile Include="$(SharedSourceRoot)HttpParseResult.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Net.Http.Headers.Tests" />
+  </ItemGroup>
 </Project>

@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 import { Encoder, Decoder } from "@msgpack/msgpack";
 
@@ -284,7 +284,8 @@ export class MessagePackHubProtocol implements IHubProtocol {
     }
 
     private _writeCompletion(completionMessage: CompletionMessage): ArrayBuffer {
-        const resultKind = completionMessage.error ? this._errorResult : completionMessage.result ? this._nonVoidResult : this._voidResult;
+        const resultKind = completionMessage.error ? this._errorResult :
+            (completionMessage.result !== undefined) ? this._nonVoidResult : this._voidResult;
 
         let payload: any;
         switch (resultKind) {

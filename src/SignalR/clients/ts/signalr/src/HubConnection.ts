@@ -1,14 +1,15 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 import { HandshakeProtocol, HandshakeRequestMessage, HandshakeResponseMessage } from "./HandshakeProtocol";
 import { IConnection } from "./IConnection";
+import { AbortError } from "./Errors";
 import { CancelInvocationMessage, CompletionMessage, IHubProtocol, InvocationMessage, MessageType, StreamInvocationMessage, StreamItemMessage } from "./IHubProtocol";
 import { ILogger, LogLevel } from "./ILogger";
 import { IRetryPolicy } from "./IRetryPolicy";
 import { IStreamResult } from "./Stream";
 import { Subject } from "./Subject";
-import { Arg } from "./Utils";
+import { Arg, getErrorString, Platform } from "./Utils";
 
 const DEFAULT_TIMEOUT_IN_MS: number = 30 * 1000;
 const DEFAULT_PING_INTERVAL_IN_MS: number = 15 * 1000;
@@ -31,13 +32,14 @@ export enum HubConnectionState {
 export class HubConnection {
     private readonly _cachedPingMessage: string | ArrayBuffer;
     // Needs to not start with _ for tests
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     private readonly connection: IConnection;
     private readonly _logger: ILogger;
     private readonly _reconnectPolicy?: IRetryPolicy;
     private _protocol: IHubProtocol;
     private _handshakeProtocol: HandshakeProtocol;
     private _callbacks: { [invocationId: string]: (invocationEvent: StreamItemMessage | CompletionMessage | null, error?: Error) => void };
-    private _methods: { [name: string]: ((...args: any[]) => void)[] };
+    private _methods: { [name: string]: (((...args: any[]) => void) | ((...args: any[]) => any))[] };
     private _invocationId: number;
 
     private _closedCallbacks: ((error?: Error) => void)[];
@@ -64,6 +66,11 @@ export class HubConnection {
     private _timeoutHandle?: any;
     private _pingServerHandle?: any;
 
+    private _freezeEventListener = () =>
+    {
+        this._logger.log(LogLevel.Warning, "The page is being frozen, this will likely lead to the connection being closed and messages being lost. For more information see the docs at https://learn.microsoft.com/aspnet/core/signalr/javascript-client#bsleep");
+    };
+
     /** The server timeout in milliseconds.
      *
      * If this timeout elapses without receiving any messages from the server, the connection will be terminated with an error.
@@ -85,17 +92,29 @@ export class HubConnection {
     // create method that can be used by HubConnectionBuilder. An "internal" constructor would just
     // be stripped away and the '.d.ts' file would have no constructor, which is interpreted as a
     // public parameter-less constructor.
-    public static create(connection: IConnection, logger: ILogger, protocol: IHubProtocol, reconnectPolicy?: IRetryPolicy): HubConnection {
-        return new HubConnection(connection, logger, protocol, reconnectPolicy);
+    public static create(
+        connection: IConnection,
+        logger: ILogger,
+        protocol: IHubProtocol,
+        reconnectPolicy?: IRetryPolicy,
+        serverTimeoutInMilliseconds?: number,
+        keepAliveIntervalInMilliseconds?: number): HubConnection {
+        return new HubConnection(connection, logger, protocol, reconnectPolicy, serverTimeoutInMilliseconds, keepAliveIntervalInMilliseconds);
     }
 
-    private constructor(connection: IConnection, logger: ILogger, protocol: IHubProtocol, reconnectPolicy?: IRetryPolicy) {
+    private constructor(
+        connection: IConnection,
+        logger: ILogger,
+        protocol: IHubProtocol,
+        reconnectPolicy?: IRetryPolicy,
+        serverTimeoutInMilliseconds?: number,
+        keepAliveIntervalInMilliseconds?: number) {
         Arg.isRequired(connection, "connection");
         Arg.isRequired(logger, "logger");
         Arg.isRequired(protocol, "protocol");
 
-        this.serverTimeoutInMilliseconds = DEFAULT_TIMEOUT_IN_MS;
-        this.keepAliveIntervalInMilliseconds = DEFAULT_PING_INTERVAL_IN_MS;
+        this.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds ?? DEFAULT_TIMEOUT_IN_MS;
+        this.keepAliveIntervalInMilliseconds = keepAliveIntervalInMilliseconds ?? DEFAULT_PING_INTERVAL_IN_MS;
 
         this._logger = logger;
         this._protocol = protocol;
@@ -173,6 +192,11 @@ export class HubConnection {
         try {
             await this._startInternal();
 
+            if (Platform.isBrowser) {
+                // Log when the browser freezes the tab so users know why their connection unexpectedly stopped working
+                window.document.addEventListener("freeze", this._freezeEventListener);
+            }
+
             this._connectionState = HubConnectionState.Connected;
             this._connectionStarted = true;
             this._logger.log(LogLevel.Debug, "HubConnection connected successfully.");
@@ -220,7 +244,12 @@ export class HubConnection {
                 // It's important to throw instead of returning a rejected promise, because we don't want to allow any state
                 // transitions to occur between now and the calling code observing the exceptions. Returning a rejected promise
                 // will cause the calling continuation to get scheduled to run later.
+                // eslint-disable-next-line @typescript-eslint/no-throw-literal
                 throw this._stopDuringStartError;
+            }
+
+            if (!this.connection.features.inherentKeepAlive) {
+                await this._sendMessage(this._cachedPingMessage);
             }
         } catch (e) {
             this._logger.log(LogLevel.Debug, `Hub handshake failed with error '${e}' during start(). Stopping HubConnection.`);
@@ -284,7 +313,7 @@ export class HubConnection {
 
         this._cleanupTimeout();
         this._cleanupPingTimer();
-        this._stopDuringStartError = error || new Error("The connection was stopped before the hub handshake could complete.");
+        this._stopDuringStartError = error || new AbortError("The connection was stopped before the hub handshake could complete.");
 
         // HttpConnection.stop() should not complete until after either HttpConnection.start() fails
         // or the onclose callback is invoked. The onclose callback will transition the HubConnection
@@ -303,7 +332,9 @@ export class HubConnection {
         const [streams, streamIds] = this._replaceStreamingParams(args);
         const invocationDescriptor = this._createStreamInvocation(methodName, args, streamIds);
 
+        // eslint-disable-next-line prefer-const
         let promiseQueue: Promise<void>;
+
         const subject = new Subject<T>();
         subject.cancelCallback = () => {
             const cancelInvocation: CancelInvocationMessage = this._createCancelInvocation(invocationDescriptor.invocationId);
@@ -428,7 +459,8 @@ export class HubConnection {
      * @param {string} methodName The name of the hub method to define.
      * @param {Function} newMethod The handler that will be raised when the hub method is invoked.
      */
-    public on(methodName: string, newMethod: (...args: any[]) => void) {
+    public on(methodName: string, newMethod: (...args: any[]) => any): void
+    public on(methodName: string, newMethod: (...args: any[]) => void): void {
         if (!methodName || !newMethod) {
             return;
         }
@@ -489,7 +521,7 @@ export class HubConnection {
      *
      * @param {Function} callback The handler that will be invoked when the connection is closed. Optionally receives a single argument containing the error that caused the connection to close (if any).
      */
-    public onclose(callback: (error?: Error) => void) {
+    public onclose(callback: (error?: Error) => void): void {
         if (callback) {
             this._closedCallbacks.push(callback);
         }
@@ -499,7 +531,7 @@ export class HubConnection {
      *
      * @param {Function} callback The handler that will be invoked when the connection starts reconnecting. Optionally receives a single argument containing the error that caused the connection to start reconnecting (if any).
      */
-    public onreconnecting(callback: (error?: Error) => void) {
+    public onreconnecting(callback: (error?: Error) => void): void {
         if (callback) {
             this._reconnectingCallbacks.push(callback);
         }
@@ -509,7 +541,7 @@ export class HubConnection {
      *
      * @param {Function} callback The handler that will be invoked when the connection successfully reconnects.
      */
-    public onreconnected(callback: (connectionId?: string) => void) {
+    public onreconnected(callback: (connectionId?: string) => void): void {
         if (callback) {
             this._reconnectedCallbacks.push(callback);
         }
@@ -531,22 +563,28 @@ export class HubConnection {
             for (const message of messages) {
                 switch (message.type) {
                     case MessageType.Invocation:
+                        // eslint-disable-next-line @typescript-eslint/no-floating-promises
                         this._invokeClientMethod(message);
                         break;
                     case MessageType.StreamItem:
-                    case MessageType.Completion:
+                    case MessageType.Completion: {
                         const callback = this._callbacks[message.invocationId];
                         if (callback) {
                             if (message.type === MessageType.Completion) {
                                 delete this._callbacks[message.invocationId];
                             }
-                            callback(message);
+                            try {
+                                callback(message);
+                            } catch (e) {
+                                this._logger.log(LogLevel.Error, `Stream callback threw error: ${getErrorString(e)}`);
+                            }
                         }
                         break;
+                    }
                     case MessageType.Ping:
                         // Don't care about pings
                         break;
-                    case MessageType.Close:
+                    case MessageType.Close: {
                         this._logger.log(LogLevel.Information, "Close message received from server.");
 
                         const error = message.error ? new Error("Server returned an error on close: " + message.error) : undefined;
@@ -555,7 +593,7 @@ export class HubConnection {
                             // It feels wrong not to await connection.stop() here, but processIncomingData is called as part of an onreceive callback which is not async,
                             // this is already the behavior for serverTimeout(), and HttpConnection.Stop() should catch and log all possible exceptions.
 
-                            // tslint:disable-next-line:no-floating-promises
+                            // eslint-disable-next-line @typescript-eslint/no-floating-promises
                             this.connection.stop(error);
                         } else {
                             // We cannot await stopInternal() here, but subsequent calls to stop() will await this if stopInternal() is still ongoing.
@@ -563,6 +601,7 @@ export class HubConnection {
                         }
 
                         break;
+                    }
                     default:
                         this._logger.log(LogLevel.Warning, `Invalid message type: ${message.type}.`);
                         break;
@@ -643,33 +682,70 @@ export class HubConnection {
         }
     }
 
-    // tslint:disable-next-line:naming-convention
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     private serverTimeout() {
         // The server hasn't talked to us in a while. It doesn't like us anymore ... :(
         // Terminate the connection, but we don't need to wait on the promise. This could trigger reconnecting.
-        // tslint:disable-next-line:no-floating-promises
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         this.connection.stop(new Error("Server timeout elapsed without receiving a message from the server."));
     }
 
-    private _invokeClientMethod(invocationMessage: InvocationMessage) {
-        const methods = this._methods[invocationMessage.target.toLowerCase()];
-        if (methods) {
-            try {
-                methods.forEach((m) => m.apply(this, invocationMessage.arguments));
-            } catch (e) {
-                this._logger.log(LogLevel.Error, `A callback for the method ${invocationMessage.target.toLowerCase()} threw error '${e}'.`);
-            }
+    private async _invokeClientMethod(invocationMessage: InvocationMessage) {
+        const methodName = invocationMessage.target.toLowerCase();
+        const methods = this._methods[methodName];
+        if (!methods) {
+            this._logger.log(LogLevel.Warning, `No client method with the name '${methodName}' found.`);
 
+            // No handlers provided by client but the server is expecting a response still, so we send an error
             if (invocationMessage.invocationId) {
-                // This is not supported in v1. So we return an error to avoid blocking the server waiting for the response.
-                const message = "Server requested a response, which is not supported in this version of the client.";
-                this._logger.log(LogLevel.Error, message);
-
-                // We don't want to wait on the stop itself.
-                this._stopPromise = this._stopInternal(new Error(message));
+                this._logger.log(LogLevel.Warning, `No result given for '${methodName}' method and invocation ID '${invocationMessage.invocationId}'.`);
+                await this._sendWithProtocol(this._createCompletionMessage(invocationMessage.invocationId, "Client didn't provide a result.", null));
             }
+            return;
+        }
+
+        // Avoid issues with handlers removing themselves thus modifying the list while iterating through it
+        const methodsCopy = methods.slice();
+
+        // Server expects a response
+        const expectsResponse = invocationMessage.invocationId ? true : false;
+        // We preserve the last result or exception but still call all handlers
+        let res;
+        let exception;
+        let completionMessage;
+        for (const m of methodsCopy) {
+            try {
+                const prevRes = res;
+                res = await m.apply(this, invocationMessage.arguments);
+                if (expectsResponse && res && prevRes) {
+                    this._logger.log(LogLevel.Error, `Multiple results provided for '${methodName}'. Sending error to server.`);
+                    completionMessage = this._createCompletionMessage(invocationMessage.invocationId!, `Client provided multiple results.`, null);
+                }
+                // Ignore exception if we got a result after, the exception will be logged
+                exception = undefined;
+            } catch (e) {
+                exception = e;
+                this._logger.log(LogLevel.Error, `A callback for the method '${methodName}' threw error '${e}'.`);
+            }
+        }
+        if (completionMessage) {
+            await this._sendWithProtocol(completionMessage);
+        } else if (expectsResponse) {
+            // If there is an exception that means either no result was given or a handler after a result threw
+            if (exception) {
+                completionMessage = this._createCompletionMessage(invocationMessage.invocationId!, `${exception}`, null);
+            } else if (res !== undefined) {
+                completionMessage = this._createCompletionMessage(invocationMessage.invocationId!, null, res);
+            } else {
+                this._logger.log(LogLevel.Warning, `No result given for '${methodName}' method and invocation ID '${invocationMessage.invocationId}'.`);
+                // Client didn't provide a result or throw from a handler, server expects a response so we send an error
+                completionMessage = this._createCompletionMessage(invocationMessage.invocationId!, "Client didn't provide a result.", null);
+            }
+            await this._sendWithProtocol(completionMessage);
         } else {
-            this._logger.log(LogLevel.Warning, `No client method with the name '${invocationMessage.target}' found.`);
+            if (res) {
+                this._logger.log(LogLevel.Error, `Result given for '${methodName}' method but server is not expecting a result.`);
+            }
         }
     }
 
@@ -677,7 +753,7 @@ export class HubConnection {
         this._logger.log(LogLevel.Debug, `HubConnection.connectionClosed(${error}) called while in state ${this._connectionState}.`);
 
         // Triggering this.handshakeRejecter is insufficient because it could already be resolved without the continuation having run yet.
-        this._stopDuringStartError = this._stopDuringStartError || error || new Error("The underlying connection was closed before the hub handshake could complete.");
+        this._stopDuringStartError = this._stopDuringStartError || error || new AbortError("The underlying connection was closed before the hub handshake could complete.");
 
         // If the handshake is in progress, start will be waiting for the handshake promise, so we complete it.
         // If it has already completed, this should just noop.
@@ -693,7 +769,7 @@ export class HubConnection {
         if (this._connectionState === HubConnectionState.Disconnecting) {
             this._completeClose(error);
         } else if (this._connectionState === HubConnectionState.Connected && this._reconnectPolicy) {
-            // tslint:disable-next-line:no-floating-promises
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this._reconnect(error);
         } else if (this._connectionState === HubConnectionState.Connected) {
             this._completeClose(error);
@@ -710,6 +786,10 @@ export class HubConnection {
         if (this._connectionStarted) {
             this._connectionState = HubConnectionState.Disconnected;
             this._connectionStarted = false;
+
+            if (Platform.isBrowser) {
+                window.document.removeEventListener("freeze", this._freezeEventListener);
+            }
 
             try {
                 this._closedCallbacks.forEach((c) => c.apply(this, [error]));
@@ -794,7 +874,7 @@ export class HubConnection {
                     return;
                 }
 
-                retryError = e instanceof Error ? e : new Error(e.toString());
+                retryError = e instanceof Error ? e : new Error((e as any).toString());
                 nextRetryDelay = this._getNextRetryDelay(previousReconnectAttempts++, Date.now() - reconnectStartTime, retryError);
             }
         }
@@ -824,7 +904,11 @@ export class HubConnection {
         Object.keys(callbacks)
             .forEach((key) => {
                 const callback = callbacks[key];
-                callback(null, error);
+                try {
+                    callback(null, error);
+                } catch (e) {
+                    this._logger.log(LogLevel.Error, `Stream 'error' callback called with '${error}' threw error: ${getErrorString(e)}`);
+                }
             });
     }
 
@@ -891,7 +975,7 @@ export class HubConnection {
         }
 
         // We want to iterate over the keys, since the keys are the stream ids
-        // tslint:disable-next-line:forin
+        // eslint-disable-next-line guard-for-in
         for (const streamId in streams) {
             streams[streamId].subscribe({
                 complete: () => {

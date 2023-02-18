@@ -7,7 +7,6 @@
     <AssemblyName>dotnet-openapi</AssemblyName>
     <PackageId>Microsoft.dotnet-openapi</PackageId>
     <PackAsTool>true</PackAsTool>
-    <RemoveDevicePlatformSupport>true</RemoveDevicePlatformSupport>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,8 +17,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.Build" ExcludeAssets="runtime" />
     <Reference Include="Microsoft.Build.Locator" />
-    <Reference Include="Microsoft.Win32.Registry"  />
-    <Reference Include="System.Security.Principal.Windows"  />
+    <Reference Include="System.Private.Uri" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,5 +31,9 @@
       <_Parameter2>$(NewtonsoftJsonVersion)</_Parameter2>
       <_Parameter3>NSwagCSharp;NSwagTypeScript</_Parameter3>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Open.Api.Tools.Tests" />
   </ItemGroup>
 </Project>

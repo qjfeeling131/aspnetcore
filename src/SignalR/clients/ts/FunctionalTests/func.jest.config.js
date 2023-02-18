@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 module.exports = {
     transformIgnorePatterns: [
@@ -18,7 +18,7 @@ module.exports = {
     },
     reporters: [
         "default",
-        ["../common/node_modules/jest-junit/index.js", { "output": "../../../../../artifacts/log/" + `${process.platform}` + ".node.functional.junit.xml" }]
+        ["../common/node_modules/jest-junit/index.js", { "outputDirectory": "../../../../../artifacts/log/", "outputName": `${process.platform}` + ".node.functional.junit.xml" }]
     ],
     transform: {
         "^.+\\.(jsx?|tsx?)$": "../common/node_modules/ts-jest"

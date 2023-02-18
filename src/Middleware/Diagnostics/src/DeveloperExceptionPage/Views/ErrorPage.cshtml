@@ -17,13 +17,13 @@
 @{
     // TODO: Response.ReasonPhrase = "Internal Server Error";
     Response.ContentType = "text/html; charset=utf-8";
-    string location = string.Empty;
+    string? location = string.Empty;
 }
 <!DOCTYPE html>
 <html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName" xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta charset="utf-8" />
-        <title>@Resources.ErrorPageHtml_Title</title>
+        <title>@Model.Title</title>
         <style>
             <%$ include: ErrorPage.css %>
         </style>
@@ -32,7 +32,7 @@
         <h1>@Resources.ErrorPageHtml_UnhandledException</h1>
         @foreach (var errorDetail in Model.ErrorDetails)
         {
-            <div class="titleerror">@errorDetail.Error.GetType().Name: @{ Output.Write(HtmlEncodeAndReplaceLineBreaks(errorDetail.Error.Message)); }</div>
+            <div class="titleerror">@errorDetail.Error!.GetType().Name: @{ Output.Write(HtmlEncodeAndReplaceLineBreaks(errorDetail.Error.Message)); }</div>
 
             var firstFrame = errorDetail.StackFrames.FirstOrDefault();
             if (firstFrame != null)
@@ -61,7 +61,7 @@
                     <ul>
                         @foreach (var ex in reflectionTypeLoadException.LoaderExceptions)
                         {
-                            <li>@ex.Message</li>
+                            <li>@ex!.Message</li>
                         }
                     </ul>
                 }
@@ -99,7 +99,7 @@
                     exceptionDetailId = "exceptionDetail" + exceptionCount;
 
                     <li>
-                        <h2 class="stackerror">@errorDetail.Error.GetType().Name: @errorDetail.Error.Message</h2>
+                        <h2>@errorDetail.Error!.GetType().Name: @errorDetail.Error.Message</h2>
                         <ul>
                             @foreach (var frame in errorDetail.StackFrames)
                             {
@@ -155,9 +155,7 @@
                     <li>
                         <br />
                         <div class="rawExceptionBlock">
-                            <div class="showRawExceptionContainer">
-                                <button class="showRawException" data-exceptionDetailId="@exceptionDetailId">Show raw exception details</button>
-                            </div>
+                            <button class="showRawException" data-exceptionDetailId="@exceptionDetailId">Show raw exception details</button>
                             <div id="@exceptionDetailId" class="rawExceptionDetails">
                                 <pre class="rawExceptionStackTrace">@errorDetail.Error.ToString()</pre>
                             </div>
@@ -255,7 +253,7 @@
         </div>
 
         <div id="routingpage" class="page">
-            <h2 class="subheader">@Resources.ErrorPageHtml_Endpoint</h2>
+            <h2>@Resources.ErrorPageHtml_Endpoint</h2>
             @if (Model.Endpoint != null)
             {
                 <table>
@@ -298,7 +296,7 @@
             {
                 <p>@Resources.ErrorPageHtml_NoEndpoint</p>
             }
-            <h2 class="subheader">@Resources.ErrorPageHtml_RouteValues</h2>
+            <h2>@Resources.ErrorPageHtml_RouteValues</h2>
             @if (Model.RouteValues != null && Model.RouteValues.Any())
             {
                 <table>
@@ -313,7 +311,7 @@
                         {
                             <tr>
                                 <td>@kv.Key</td>
-                                <td>@kv.Value</td>
+                                <td>@(kv.Value!)</td>
                             </tr>
                         }
                     </tbody>

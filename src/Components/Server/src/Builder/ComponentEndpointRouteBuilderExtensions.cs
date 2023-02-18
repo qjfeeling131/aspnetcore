@@ -1,115 +1,121 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 
-namespace Microsoft.AspNetCore.Builder
+namespace Microsoft.AspNetCore.Builder;
+
+/// <summary>
+/// Extensions for <see cref="IEndpointRouteBuilder"/>.
+/// </summary>
+public static class ComponentEndpointRouteBuilderExtensions
 {
     /// <summary>
-    /// Extensions for <see cref="IEndpointRouteBuilder"/>.
+    /// Maps the Blazor <see cref="Hub" /> to the default path.
     /// </summary>
-    public static class ComponentEndpointRouteBuilderExtensions
+    /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+    /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+    public static ComponentEndpointConventionBuilder MapBlazorHub(this IEndpointRouteBuilder endpoints)
     {
-        /// <summary>
-        /// Maps the Blazor <see cref="Hub" /> to the default path.
-        /// </summary>
-        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
-        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
-        public static ComponentEndpointConventionBuilder MapBlazorHub(this IEndpointRouteBuilder endpoints)
+        ArgumentNullException.ThrowIfNull(endpoints);
+
+        return endpoints.MapBlazorHub(ComponentHub.DefaultPath);
+    }
+
+    /// <summary>
+    /// Maps the Blazor <see cref="Hub" /> to the path <paramref name="path"/>.
+    /// </summary>
+    /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+    /// <param name="path">The path to map the Blazor <see cref="Hub" />.</param>
+    /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+    public static ComponentEndpointConventionBuilder MapBlazorHub(
+        this IEndpointRouteBuilder endpoints,
+        string path)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+        ArgumentNullException.ThrowIfNull(path);
+
+        return endpoints.MapBlazorHub(path, configureOptions: _ => { });
+    }
+
+    /// <summary>
+    ///Maps the Blazor <see cref="Hub" /> to the default path.
+    /// </summary>
+    /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+    /// <param name="configureOptions">A callback to configure dispatcher options.</param>
+    /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+    public static ComponentEndpointConventionBuilder MapBlazorHub(
+        this IEndpointRouteBuilder endpoints,
+        Action<HttpConnectionDispatcherOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        return endpoints.MapBlazorHub(ComponentHub.DefaultPath, configureOptions);
+    }
+
+    /// <summary>
+    /// Maps the Blazor <see cref="Hub" /> to the path <paramref name="path"/>.
+    /// </summary>
+    /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+    /// <param name="path">The path to map the Blazor <see cref="Hub" />.</param>
+    /// <param name="configureOptions">A callback to configure dispatcher options.</param>
+    /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+    public static ComponentEndpointConventionBuilder MapBlazorHub(
+        this IEndpointRouteBuilder endpoints,
+        string path,
+        Action<HttpConnectionDispatcherOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var hubEndpoint = endpoints.MapHub<ComponentHub>(path, configureOptions);
+
+        var disconnectEndpoint = endpoints.Map(
+            (path.EndsWith('/') ? path : path + "/") + "disconnect/",
+            endpoints.CreateApplicationBuilder().UseMiddleware<CircuitDisconnectMiddleware>().Build())
+            .WithDisplayName("Blazor disconnect");
+
+        var jsInitializersEndpoint = endpoints.Map(
+            (path.EndsWith('/') ? path : path + "/") + "initializers/",
+            endpoints.CreateApplicationBuilder().UseMiddleware<CircuitJavaScriptInitializationMiddleware>().Build())
+            .WithDisplayName("Blazor initializers");
+
+        var blazorEndpoint = GetBlazorEndpoint(endpoints);
+
+        return new ComponentEndpointConventionBuilder(hubEndpoint, disconnectEndpoint, jsInitializersEndpoint, blazorEndpoint);
+    }
+
+    private static IEndpointConventionBuilder GetBlazorEndpoint(IEndpointRouteBuilder endpoints)
+    {
+        var options = new StaticFileOptions
         {
-            if (endpoints == null)
-            {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
+            FileProvider = new ManifestEmbeddedFileProvider(typeof(ComponentEndpointRouteBuilderExtensions).Assembly),
+            OnPrepareResponse = CacheHeaderSettings.SetCacheHeaders
+        };
 
-            return endpoints.MapBlazorHub(ComponentHub.DefaultPath);
-        }
-
-        /// <summary>
-        /// Maps the Blazor <see cref="Hub" /> to the path <paramref name="path"/>.
-        /// </summary>
-        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
-        /// <param name="path">The path to map the Blazor <see cref="Hub" />.</param>
-        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
-        public static ComponentEndpointConventionBuilder MapBlazorHub(
-            this IEndpointRouteBuilder endpoints,
-            string path)
+        var app = endpoints.CreateApplicationBuilder();
+        app.Use(next => context =>
         {
-            if (endpoints == null)
-            {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
+            // Set endpoint to null so the static files middleware will handle the request.
+            context.SetEndpoint(null);
 
-            if (path == null)
-            {
-                throw new ArgumentNullException(nameof(path));
-            }
+            return next(context);
+        });
+        app.UseStaticFiles(options);
 
-            return endpoints.MapBlazorHub(path, configureOptions: _ => { });
-        }
+        var blazorEndpoint = endpoints.Map("/_framework/blazor.server.js", app.Build())
+            .WithDisplayName("Blazor static files");
 
-        /// <summary>
-        ///Maps the Blazor <see cref="Hub" /> to the default path.
-        /// </summary>
-        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
-        /// <param name="configureOptions">A callback to configure dispatcher options.</param>
-        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
-        public static ComponentEndpointConventionBuilder MapBlazorHub(
-            this IEndpointRouteBuilder endpoints,
-            Action<HttpConnectionDispatcherOptions> configureOptions)
-        {
-            if (endpoints == null)
-            {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
+        blazorEndpoint.Add((builder) => ((RouteEndpointBuilder)builder).Order = int.MinValue);
 
-            if (configureOptions == null)
-            {
-                throw new ArgumentNullException(nameof(configureOptions));
-            }
-
-            return endpoints.MapBlazorHub(ComponentHub.DefaultPath, configureOptions);
-        }
-
-        /// <summary>
-        /// Maps the Blazor <see cref="Hub" /> to the path <paramref name="path"/>.
-        /// </summary>
-        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
-        /// <param name="path">The path to map the Blazor <see cref="Hub" />.</param>
-        /// <param name="configureOptions">A callback to configure dispatcher options.</param>
-        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
-        public static ComponentEndpointConventionBuilder MapBlazorHub(
-            this IEndpointRouteBuilder endpoints,
-            string path,
-            Action<HttpConnectionDispatcherOptions> configureOptions)
-        {
-            if (endpoints == null)
-            {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
-
-            if (path == null)
-            {
-                throw new ArgumentNullException(nameof(path));
-            }
-
-            if (configureOptions == null)
-            {
-                throw new ArgumentNullException(nameof(configureOptions));
-            }
-
-            var hubEndpoint = endpoints.MapHub<ComponentHub>(path, configureOptions);
-
-            var disconnectEndpoint = endpoints.Map(
-                (path.EndsWith('/') ? path : path + "/") + "disconnect/",
-                endpoints.CreateApplicationBuilder().UseMiddleware<CircuitDisconnectMiddleware>().Build())
-                .WithDisplayName("Blazor disconnect");
-
-            return new ComponentEndpointConventionBuilder(hubEndpoint, disconnectEndpoint);
-        }
+        return blazorEndpoint;
     }
 }

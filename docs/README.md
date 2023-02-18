@@ -11,7 +11,7 @@ The table below outlines the different docs in this folder and what they are hel
 | Documentation        | What is it about?   | Who is it for?      |
 |--------------------------------------------------------------------------|-------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | [API review process](APIReviewProcess.md)      | Outlines the process for reviewing API changes in ASP.NET Core          | Anyone looking to understand the process for making API changes to ASP.NET Core      |
-| [Artifacts structure](Artifacts.md)            | Outlines the artifacts produced by the build  | Anyone looking to understand artifiacts produced from an Azure DevOps build          |
+| [Artifacts structure](Artifacts.md)            | Outlines the artifacts produced by the build  | Anyone looking to understand artifacts produced from an Azure DevOps build          |
 | [Troubleshooting build errors](BuildErrors.md) | Common errors that occur when building the repo and how to resolve them | Anyone running into an issue with the build        |
 | [Building from source](BuildFromSource.md)     | Setup instructions for the ASP.NET Core repo  | First-time contributors          |
 | [Working with EventSources and EventCounters](EventSourceAndCounters.md) | Guidance on adding event tracing to a library | Anyone needing to add event tracing for diagnostics purposes      |
@@ -22,6 +22,9 @@ The table below outlines the different docs in this folder and what they are hel
 | [How references are resolved](ReferenceResolution.md)       | Overview of dependency reference setup in the repo         | Anyone looking to understand how package references are configured in the repo |
 | [Servicing changes](Servicing.md) | Documentation on how to submit servicing PRs to previous releases       | Anyone to submit patches or backports to prior releases, contains the "Shiproom Template"  |
 | [Shared framework](SharedFramework.md)         | Overview of the ASP.NET Core Shared framework | Anyone looking to understand the policies in place for managing the code of the shared framework         |
-| Submodules           | Documentation on working with submodules in Git     |   Anyone working with submodules in the repo     |
+| [Submodules](Submodules.md)           | Documentation on working with submodules in Git     |   Anyone working with submodules in the repo     |
 | [Triage process](TriageProcess.md)| Overview of the issue triage process used in the repo     | Anyone looking to understand the triage process on the repo  |
-
+| [Updating Major Version & TFM](UpdatingMajorVersionAndTFM.md)| Instructions for updating the repo branding & TFM in preparation for a new major release     | Repo developers who want to know more about our branding & release process  |
+| [Assembly trimming guide](Trimming.md)| Guidance on adding trimming support to an ASP.NET Core assembly     | Repo developers who want to help add support for trimming to ASP.NET Core  |
+| [Adding new Projects to the Repo](AddingNewProjects.md) | Outlines the process of adding new projects (i.e. `.csproj` files) to the repo | Anyone who finds themselves trying to add a new project and including it in the build.
+| [Using WebTransport in Kestrel](WebTransport.md) | Outlines how to setup Kestrel to use WebTransport | Anyone looking to support WebTransport |

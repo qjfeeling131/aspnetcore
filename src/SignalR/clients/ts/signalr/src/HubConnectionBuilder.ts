@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 import { DefaultReconnectPolicy } from "./DefaultReconnectPolicy";
 import { HttpConnection } from "./HttpConnection";
@@ -13,8 +13,7 @@ import { JsonHubProtocol } from "./JsonHubProtocol";
 import { NullLogger } from "./Loggers";
 import { Arg, ConsoleLogger } from "./Utils";
 
-// tslint:disable:object-literal-sort-keys
-const LogLevelNameMapping = {
+const LogLevelNameMapping: {[k: string]: LogLevel} = {
     trace: LogLevel.Trace,
     debug: LogLevel.Debug,
     info: LogLevel.Information,
@@ -40,6 +39,9 @@ function parseLogLevel(name: string): LogLevel {
 
 /** A builder for configuring {@link @microsoft/signalr.HubConnection} instances. */
 export class HubConnectionBuilder {
+    private _serverTimeoutInMilliseconds?: number;
+    private _keepAliveIntervalInMilliseconds ?: number;
+
     /** @internal */
     public protocol?: IHubProtocol;
     /** @internal */
@@ -70,14 +72,14 @@ export class HubConnectionBuilder {
     /** Configures custom logging for the {@link @microsoft/signalr.HubConnection}.
      *
      * @param {string} logLevel A string representing a LogLevel setting a minimum level of messages to log.
-     *    See {@link https://docs.microsoft.com/aspnet/core/signalr/configuration#configure-logging|the documentation for client logging configuration} for more details.
+     *    See {@link https://learn.microsoft.com/aspnet/core/signalr/configuration#configure-logging|the documentation for client logging configuration} for more details.
      */
     public configureLogging(logLevel: string): HubConnectionBuilder;
 
     /** Configures custom logging for the {@link @microsoft/signalr.HubConnection}.
      *
      * @param {LogLevel | string | ILogger} logging A {@link @microsoft/signalr.LogLevel}, a string representing a LogLevel, or an object implementing the {@link @microsoft/signalr.ILogger} interface.
-     *    See {@link https://docs.microsoft.com/aspnet/core/signalr/configuration#configure-logging|the documentation for client logging configuration} for more details.
+     *    See {@link https://learn.microsoft.com/aspnet/core/signalr/configuration#configure-logging|the documentation for client logging configuration} for more details.
      * @returns The {@link @microsoft/signalr.HubConnectionBuilder} instance, for chaining.
      */
     public configureLogging(logging: LogLevel | string | ILogger): HubConnectionBuilder;
@@ -184,6 +186,30 @@ export class HubConnectionBuilder {
         return this;
     }
 
+    /** Configures {@link @microsoft/signalr.HubConnection.serverTimeoutInMilliseconds} for the {@link @microsoft/signalr.HubConnection}.
+     *
+     * @returns The {@link @microsoft/signalr.HubConnectionBuilder} instance, for chaining.
+     */
+    public withServerTimeout(milliseconds: number): HubConnectionBuilder {
+        Arg.isRequired(milliseconds, "milliseconds");
+
+        this._serverTimeoutInMilliseconds = milliseconds;
+
+        return this;
+    }
+
+    /** Configures {@link @microsoft/signalr.HubConnection.keepAliveIntervalInMilliseconds} for the {@link @microsoft/signalr.HubConnection}.
+     *
+     * @returns The {@link @microsoft/signalr.HubConnectionBuilder} instance, for chaining.
+     */
+    public withKeepAliveInterval(milliseconds: number): HubConnectionBuilder {
+        Arg.isRequired(milliseconds, "milliseconds");
+
+        this._keepAliveIntervalInMilliseconds = milliseconds;
+
+        return this;
+    }
+
     /** Creates a {@link @microsoft/signalr.HubConnection} from the configuration options specified in this builder.
      *
      * @returns {HubConnection} The configured {@link @microsoft/signalr.HubConnection}.
@@ -209,7 +235,9 @@ export class HubConnectionBuilder {
             connection,
             this.logger || NullLogger.instance,
             this.protocol || new JsonHubProtocol(),
-            this.reconnectPolicy);
+            this.reconnectPolicy,
+            this._serverTimeoutInMilliseconds,
+            this._keepAliveIntervalInMilliseconds);
     }
 }
 

@@ -1,18 +1,23 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
-namespace Microsoft.AspNetCore.Routing.Constraints
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Routing.Matching;
+
+namespace Microsoft.AspNetCore.Routing.Constraints;
+
+/// <summary>
+/// Constrains a route parameter to contain only lowercase or uppercase letters A through Z in the English alphabet.
+/// </summary>
+public partial class AlphaRouteConstraint : RegexRouteConstraint, ICachableParameterPolicy
 {
     /// <summary>
-    /// Constrains a route parameter to contain only lowercase or uppercase letters A through Z in the English alphabet.
+    /// Initializes a new instance of the <see cref="AlphaRouteConstraint" /> class.
     /// </summary>
-    public class AlphaRouteConstraint : RegexRouteConstraint
+    public AlphaRouteConstraint() : base(GetAlphaRouteRegex())
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AlphaRouteConstraint" /> class.
-        /// </summary>
-        public AlphaRouteConstraint() : base(@"^[a-z]*$")
-        {
-        }
     }
+
+    [GeneratedRegex(@"^[A-Za-z]*$")]
+    private static partial Regex GetAlphaRouteRegex();
 }

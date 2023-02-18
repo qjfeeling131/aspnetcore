@@ -1,83 +1,90 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing.Matching;
 
-namespace Microsoft.AspNetCore.Routing.Constraints
+namespace Microsoft.AspNetCore.Routing.Constraints;
+
+/// <summary>
+/// Constrains a route parameter to match a regular expression.
+/// </summary>
+public class RegexRouteConstraint : IRouteConstraint, IParameterLiteralNodeMatchingPolicy
 {
+    private static readonly TimeSpan RegexMatchTimeout = TimeSpan.FromSeconds(10);
+    private readonly string _regexPattern;
+    private Regex? _constraint;
+
     /// <summary>
-    /// Constrains a route parameter to match a regular expression.
+    /// Constructor for a <see cref="RegexRouteConstraint"/> given a <paramref name="regex"/>.
     /// </summary>
-    public class RegexRouteConstraint : IRouteConstraint
+    /// <param name="regex">A <see cref="Regex"/> instance to use as a constraint.</param>
+    public RegexRouteConstraint(Regex regex)
     {
-        private static readonly TimeSpan RegexMatchTimeout = TimeSpan.FromSeconds(10);
+        ArgumentNullException.ThrowIfNull(regex);
 
-        /// <summary>
-        /// Constructor for a <see cref="RegexRouteConstraint"/> given a <paramref name="regex"/>.
-        /// </summary>
-        /// <param name="regex">A <see cref="Regex"/> instance to use as a constraint.</param>
-        public RegexRouteConstraint(Regex regex)
+        _constraint = regex;
+        _regexPattern = regex.ToString();
+    }
+
+    /// <summary>
+    /// Constructor for a <see cref="RegexRouteConstraint"/> given a <paramref name="regexPattern"/>.
+    /// </summary>
+    /// <param name="regexPattern">A string containing the regex pattern.</param>
+    public RegexRouteConstraint(
+        [StringSyntax(StringSyntaxAttribute.Regex, RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+        string regexPattern)
+    {
+        ArgumentNullException.ThrowIfNull(regexPattern);
+
+        _regexPattern = regexPattern;
+    }
+
+    /// <summary>
+    /// Gets the regular expression used in the route constraint.
+    /// </summary>
+    public Regex Constraint
+    {
+        get
         {
-            if (regex == null)
-            {
-                throw new ArgumentNullException(nameof(regex));
-            }
-
-            Constraint = regex;
-        }
-
-        /// <summary>
-        /// Constructor for a <see cref="RegexRouteConstraint"/> given a <paramref name="regexPattern"/>.
-        /// </summary>
-        /// <param name="regexPattern">A string containing the regex pattern.</param>
-        public RegexRouteConstraint(string regexPattern)
-        {
-            if (regexPattern == null)
-            {
-                throw new ArgumentNullException(nameof(regexPattern));
-            }
-
-            Constraint = new Regex(
-                regexPattern,
-                RegexOptions.CultureInvariant | RegexOptions.IgnoreCase,
+            // Create regex instance lazily to avoid compiling regexes at app startup. Delay creation until constraint is first evaluated.
+            // This is not thread safe. No side effect but multiple instances of a regex instance could be created from a burst of requests.
+            _constraint ??= new Regex(
+                _regexPattern,
+                RegexOptions.CultureInvariant | RegexOptions.Compiled | RegexOptions.IgnoreCase,
                 RegexMatchTimeout);
+
+            return _constraint;
         }
+    }
 
-        /// <summary>
-        /// Gets the regular expression used in the route constraint.
-        /// </summary>
-        public Regex Constraint { get; private set; }
+    /// <inheritdoc />
+    public bool Match(
+        HttpContext? httpContext,
+        IRouter? route,
+        string routeKey,
+        RouteValueDictionary values,
+        RouteDirection routeDirection)
+    {
+        ArgumentNullException.ThrowIfNull(routeKey);
+        ArgumentNullException.ThrowIfNull(values);
 
-        /// <inheritdoc />
-        public bool Match(
-            HttpContext? httpContext,
-            IRouter? route,
-            string routeKey,
-            RouteValueDictionary values,
-            RouteDirection routeDirection)
+        if (values.TryGetValue(routeKey, out var routeValue)
+            && routeValue != null)
         {
-            if (routeKey == null)
-            {
-                throw new ArgumentNullException(nameof(routeKey));
-            }
+            var parameterValueString = Convert.ToString(routeValue, CultureInfo.InvariantCulture)!;
 
-            if (values == null)
-            {
-                throw new ArgumentNullException(nameof(values));
-            }
-
-            if (values.TryGetValue(routeKey, out var routeValue)
-                && routeValue != null)
-            {
-                var parameterValueString = Convert.ToString(routeValue, CultureInfo.InvariantCulture)!;
-
-                return Constraint.IsMatch(parameterValueString);
-            }
-
-            return false;
+            return Constraint.IsMatch(parameterValueString);
         }
+
+        return false;
+    }
+
+    bool IParameterLiteralNodeMatchingPolicy.MatchesLiteral(string parameterName, string literal)
+    {
+        return Constraint.IsMatch(literal);
     }
 }

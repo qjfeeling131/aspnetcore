@@ -4,7 +4,7 @@ ASP.NET Core SignalR is a library for ASP.NET Core developers that makes it incr
 
 You can watch an introductory presentation here - [ASP.NET Core SignalR: Build 2018](https://www.youtube.com/watch?v=Lws0zOaseIM)
 
-Documentation for ASP.NET Core SignalR can be found in the [Real-time Apps](https://docs.microsoft.com/aspnet/core/signalr/introduction) section of the ASP.NET Core Documentation site.
+Documentation for ASP.NET Core SignalR can be found in the [Real-time Apps](https://learn.microsoft.com/aspnet/core/signalr/introduction) section of the ASP.NET Core Documentation site.
 
 ## Description
 
@@ -32,7 +32,7 @@ The following contains a description of the sub-directories.
 
 By default, the build script will try to build Java and Typescript projects. If you don't want to include those, you can pass "-NoBuildJava" and "-NoBuildNodeJS" respectively to the build script to skip them. Or "--no-build-java" and "--no-build-nodejs" on MacOS or Linux.
 
-To build this specific project from source, you can follow the instructions [on building a subset of the code](https://github.com/dotnet/aspnetcore/blob/main/docs/BuildFromSource.md#building-a-subset-of-the-code).
+To build this specific project from source, follow the instructions [on building the project](../../docs/BuildFromSource.md#step-3-build-the-repo).
 
 Or for the less detailed explanation, run the following command inside this directory.
 ```powershell

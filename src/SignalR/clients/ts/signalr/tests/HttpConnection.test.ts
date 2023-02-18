@@ -1,13 +1,13 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
-import { HttpResponse } from "../src/HttpClient";
+import { HttpRequest, HttpResponse } from "../src/HttpClient";
 import { HttpConnection, INegotiateResponse, TransportSendQueue } from "../src/HttpConnection";
 import { IHttpConnectionOptions } from "../src/IHttpConnectionOptions";
 import { HttpTransportType, ITransport, TransferFormat } from "../src/ITransport";
 import { getUserAgentHeader } from "../src/Utils";
 
-import { HttpError } from "../src/Errors";
+import { AbortError, HttpError } from "../src/Errors";
 import { ILogger, LogLevel } from "../src/ILogger";
 import { NullLogger } from "../src/Loggers";
 import { EventSourceConstructor, WebSocketConstructor } from "../src/Polyfills";
@@ -17,6 +17,7 @@ import { TestHttpClient } from "./TestHttpClient";
 import { TestTransport } from "./TestTransport";
 import { TestEvent, TestWebSocket } from "./TestWebSocket";
 import { PromiseSource, registerUnhandledRejectionHandler, SyncPoint } from "./Utils";
+import { HeaderNames } from "../src/HeaderNames";
 
 const commonOptions: IHttpConnectionOptions = {
     logger: NullLogger.instance,
@@ -160,9 +161,12 @@ describe("HttpConnection", () => {
 
             await stopPromise;
 
-            await expect(startPromise)
-                .rejects
-                .toThrow("The connection was stopped during negotiation.");
+            try {
+                await startPromise
+            } catch (e) {
+                expect(e).toBeInstanceOf(AbortError);
+                expect((e as AbortError).message).toBe("The connection was stopped during negotiation.");
+            }
         },
         "Failed to start the connection: Error: The connection was stopped during negotiation.");
     });
@@ -212,7 +216,7 @@ describe("HttpConnection", () => {
         await VerifyLogger.run(async (loggerImpl) => {
             let negotiateCount: number = 0;
             const options: IHttpConnectionOptions = {
-                WebSocket: false,
+                WebSocket: TestWebSocket,
                 ...commonOptions,
                 httpClient: new TestHttpClient()
                     .on("POST", () =>  {
@@ -226,19 +230,29 @@ describe("HttpConnection", () => {
                 transport: HttpTransportType.WebSockets,
             } as IHttpConnectionOptions;
 
+            TestWebSocket.webSocketSet = new PromiseSource();
+
             const connection = new HttpConnection("http://tempuri.org", options);
-            await expect(connection.start(TransferFormat.Text))
+            const startPromise = connection.start(TransferFormat.Text);
+
+            await TestWebSocket.webSocketSet;
+            await TestWebSocket.webSocket.closeSet;
+            TestWebSocket.webSocket.onclose(new TestEvent());
+
+            await expect(startPromise)
                 .rejects
-                .toThrow("Unable to connect to the server with any of the available transports. WebSockets failed: Error: WebSocket failed to connect. " +
+                .toThrow("Unable to connect to the server with any of the available transports. Error: WebSockets failed: Error: WebSocket failed to connect. " +
                 "The connection could not be found on the server, either the endpoint may not be a SignalR endpoint, the connection ID is not present on the server, " +
                 "or there is a proxy blocking WebSockets. If you have multiple servers check that sticky sessions are enabled. ServerSentEvents failed: Error: 'ServerSentEvents' is disabled by the client. LongPolling failed: Error: 'LongPolling' is disabled by the client.");
 
             expect(negotiateCount).toEqual(1);
         },
+        /* eslint-disable max-len */
         "Failed to start the transport 'WebSockets': Error: WebSocket failed to connect. The connection could not be found on the server, " +
         "either the endpoint may not be a SignalR endpoint, the connection ID is not present on the server, or there is a proxy blocking WebSockets. If you have multiple servers check that sticky sessions are enabled.",
-        "Failed to start the connection: Error: Unable to connect to the server with any of the available transports. WebSockets failed: " +
+        "Failed to start the connection: Error: Unable to connect to the server with any of the available transports. Error: WebSockets failed: " +
         "Error: WebSocket failed to connect. The connection could not be found on the server, either the endpoint may not be a SignalR endpoint, the connection ID is not present on the server, or there is a proxy blocking WebSockets. If you have multiple servers check that sticky sessions are enabled. ServerSentEvents failed: Error: 'ServerSentEvents' is disabled by the client. LongPolling failed: Error: 'LongPolling' is disabled by the client.");
+        /* eslint-enable max-len */
     });
 
     it("negotiate called again when transport fails to start and falls back", async () => {
@@ -263,13 +277,14 @@ describe("HttpConnection", () => {
             const connection = new HttpConnection("http://tempuri.org", options);
             await expect(connection.start(TransferFormat.Text))
                 .rejects
-                .toThrow("Unable to connect to the server with any of the available transports. WebSockets failed: Error: Don't allow Websockets. ServerSentEvents failed: Error: Don't allow ServerSentEvents. LongPolling failed: Error: 'LongPolling' is disabled by the client.");
+                .toThrow("Unable to connect to the server with any of the available transports. Error: WebSockets failed: Error: Don't allow Websockets. Error: ServerSentEvents failed: Error: Don't allow ServerSentEvents. LongPolling failed: Error: 'LongPolling' is disabled by the client.");
 
             expect(negotiateCount).toEqual(2);
         },
         "Failed to start the transport 'WebSockets': Error: Don't allow Websockets.",
         "Failed to start the transport 'ServerSentEvents': Error: Don't allow ServerSentEvents.",
-        "Failed to start the connection: Error: Unable to connect to the server with any of the available transports. WebSockets failed: Error: Don't allow Websockets. ServerSentEvents failed: Error: Don't allow ServerSentEvents. LongPolling failed: Error: 'LongPolling' is disabled by the client.");
+        "Failed to start the connection: Error: Unable to connect to the server with any of the available transports. Error: WebSockets failed: Error: Don't allow Websockets. " +
+        "Error: ServerSentEvents failed: Error: Don't allow ServerSentEvents. LongPolling failed: Error: 'LongPolling' is disabled by the client.");
     });
 
     it("failed re-negotiate fails start", async () => {
@@ -468,7 +483,7 @@ describe("HttpConnection", () => {
                     await connection.start(TransferFormat.Text);
                     fail("Expected connection.start to throw!");
                 } catch (e) {
-                    expect(e.message).toBe(`Unable to connect to the server with any of the available transports. ${HttpTransportType[requestedTransport]} failed: Error: '${HttpTransportType[requestedTransport]}' is disabled by the client.`);
+                    expect((e as any).message).toBe(`Unable to connect to the server with any of the available transports. ${HttpTransportType[requestedTransport]} failed: Error: '${HttpTransportType[requestedTransport]}' is disabled by the client.`);
                 }
             },
             `Failed to start the connection: Error: Unable to connect to the server with any of the available transports. ${HttpTransportType[requestedTransport]} failed: Error: '${HttpTransportType[requestedTransport]}' is disabled by the client.`);
@@ -483,7 +498,6 @@ describe("HttpConnection", () => {
                 constructor() {
                     this._onopen = null;
                 }
-                // tslint:disable-next-line:variable-name
                 private _onopen: ((this: WebSocket, ev: Event) => any) | null;
                 public get onopen(): ((this: WebSocket, ev: Event) => any) | null {
                     return this._onopen;
@@ -654,6 +668,7 @@ describe("HttpConnection", () => {
         await VerifyLogger.run(async (logger) => {
             let firstNegotiate = true;
             let firstPoll = true;
+            const pollingPromiseSource = new PromiseSource();
             const httpClient = new TestHttpClient()
                 .on("POST", /\/negotiate/, (r) => {
                     if (firstNegotiate) {
@@ -675,7 +690,7 @@ describe("HttpConnection", () => {
                         connectionId: "0rge0d00-0040-0030-0r00-000q00r00e00",
                     };
                 })
-                .on("GET", (r) => {
+                .on("GET", async (r) => {
                     if (r.headers && r.headers.Authorization !== "Bearer secondSecret") {
                         return new HttpResponse(401, "Unauthorized", "");
                     }
@@ -684,6 +699,7 @@ describe("HttpConnection", () => {
                         firstPoll = false;
                         return "";
                     }
+                    await pollingPromiseSource.promise;
                     return new HttpResponse(204, "No Content", "");
                 })
                 .on("DELETE", () => new HttpResponse(202));
@@ -705,6 +721,8 @@ describe("HttpConnection", () => {
                 expect(httpClient.sentRequests[1].url).toBe("https://another.domain.url/chat/negotiate?negotiateVersion=1");
                 expect(httpClient.sentRequests[2].url).toMatch(/^https:\/\/another\.domain\.url\/chat\?id=0rge0d00-0040-0030-0r00-000q00r00e00/i);
                 expect(httpClient.sentRequests[3].url).toMatch(/^https:\/\/another\.domain\.url\/chat\?id=0rge0d00-0040-0030-0r00-000q00r00e00/i);
+
+                pollingPromiseSource.resolve();
             } finally {
                 await connection.stop();
             }
@@ -752,11 +770,13 @@ describe("HttpConnection", () => {
                     .on("POST", () => ({ connectionId: "42", availableTransports: [availableTransport] }))
                     .on("GET", (r) => {
                         httpClientGetCount++;
-                        // tslint:disable-next-line:no-string-literal
-                        const authorizationValue = r.headers!["Authorization"];
+                        const authorizationValue = r.headers![HeaderNames.Authorization];
                         if (httpClientGetCount === 1) {
+                            // Auth failure to cause a retry with a call to accessTokenFactory
+                            return new HttpResponse(401);
+                        } else if (httpClientGetCount === 2) {
                             if (authorizationValue) {
-                                fail("First long poll request should have a authorization header.");
+                                fail("First long poll request should have no authorization header.");
                             }
                             // First long polling request must succeed so start completes
                             return "";
@@ -1096,7 +1116,6 @@ describe("HttpConnection", () => {
             const availableTransports = [{ transport: "WebSockets", transferFormats: ["Text"] }, { transport: "LongPolling", transferFormats: ["Text"] }];
             let negotiateCount: number = 0;
             let getCount: number = 0;
-            let connection: HttpConnection;
             const options: IHttpConnectionOptions = {
                 WebSocket: TestWebSocket,
                 ...commonOptions,
@@ -1119,7 +1138,7 @@ describe("HttpConnection", () => {
 
             TestWebSocket.webSocketSet = new PromiseSource();
 
-            connection = new HttpConnection("http://tempuri.org", options);
+            const connection = new HttpConnection("http://tempuri.org", options);
             const startPromise = connection.start(TransferFormat.Text);
 
             await TestWebSocket.webSocketSet;
@@ -1187,6 +1206,27 @@ describe("HttpConnection", () => {
                 await connection.stop();
             }
         }, "Failed to start the connection: Error: nope");
+    });
+
+    it("sets timeout on negotiate request", async () => {
+        await VerifyLogger.run(async (logger) => {
+            let request!: HttpRequest;
+            const options: IHttpConnectionOptions = {
+                ...commonOptions,
+                httpClient: new TestHttpClient()
+                    .on("POST", (r) => {
+                        request = r;
+                        return new HttpResponse(999);
+                    }),
+                logger,
+            } as IHttpConnectionOptions;
+
+            const connection = new HttpConnection("http://tempuri.org", options);
+            await expect(connection.start(TransferFormat.Text))
+                .rejects.toThrow();
+            expect(request.timeout).toEqual(100000);
+        },
+        "Failed to start the connection: Error: Unexpected status code returned from negotiate '999'");
     });
 
     it("logMessageContent displays correctly with binary data", async () => {
@@ -1285,8 +1325,6 @@ describe("HttpConnection", () => {
                 let eventSourceConstructorCalled: boolean = false;
 
                 class TestEventSource {
-                    // The "_" prefix tell TypeScript not to worry about unused parameter, but tslint doesn't like it.
-                    // tslint:disable-next-line:variable-name
                     constructor(_url: string, _eventSourceInitDict: EventSourceInit) {
                         eventSourceConstructorCalled = true;
                         throw new Error("EventSource constructor called.");
@@ -1312,19 +1350,17 @@ describe("HttpConnection", () => {
 
                 await expect(connection.start(TransferFormat.Text))
                     .rejects
-                    .toEqual(new Error("Unable to connect to the server with any of the available transports. ServerSentEvents failed: Error: EventSource constructor called."));
+                    .toEqual(new Error("Unable to connect to the server with any of the available transports. Error: ServerSentEvents failed: Error: EventSource constructor called."));
 
                 expect(eventSourceConstructorCalled).toEqual(true);
             },
             "Failed to start the transport 'ServerSentEvents': Error: EventSource constructor called.",
-            "Failed to start the connection: Error: Unable to connect to the server with any of the available transports. ServerSentEvents failed: Error: EventSource constructor called.");
+            "Failed to start the connection: Error: Unable to connect to the server with any of the available transports. Error: ServerSentEvents failed: Error: EventSource constructor called.");
         });
 
         it("uses WebSocket constructor from options if provided", async () => {
             await VerifyLogger.run(async (logger) => {
                 class BadConstructorWebSocket {
-                    // The "_" prefix tell TypeScript not to worry about unused parameter, but tslint doesn't like it.
-                    // tslint:disable-next-line:variable-name
                     constructor(_url: string, _protocols?: string | string[]) {
                         throw new Error("WebSocket constructor called.");
                     }

@@ -4,13 +4,13 @@ This project contains types for manipulating HTML content.
 
 ## Description
 
-This project contains interfaces and abstractions used in MVC to support writing and modifying HTML content. For a full list of the types defined in this class, see [the namespace documentation](https://docs.microsoft.com/dotnet/api/microsoft.aspnetcore.html).
+This project contains interfaces and abstractions used in MVC to support writing and modifying HTML content. For a full list of the types defined in this class, see [the namespace documentation](https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.html).
 
 ## Development Setup
 
 ### Build
 
-To build this specific project from source, follow the instructions [on building a subset of the code](../../../BuildFromSource.md#building-a-subset-of-the-code).
+To build this specific project from source, follow the instructions [on building the project](../../docs/BuildFromSource.md#step-3-build-the-repo).
 
 ### Test
 

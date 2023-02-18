@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 package com.microsoft.signalr;
 
@@ -9,9 +9,9 @@ import java.util.List;
 
 class InvocationHandler {
     private final List<Type> types;
-    private final ActionBase action;
+    private final Object action;
 
-    InvocationHandler(ActionBase action, Type... types) {
+    InvocationHandler(Object action, Type... types) {
         this.action = action;
         this.types = Arrays.asList(types);
     }
@@ -20,7 +20,11 @@ class InvocationHandler {
         return types;
     }
 
-    public ActionBase getAction() {
+    public Object getAction() {
         return action;
+    }
+
+    public boolean getHasResult() {
+        return action instanceof FunctionBase;
     }
 }
